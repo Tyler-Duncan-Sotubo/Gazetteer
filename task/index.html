@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="libs/css/style.css" />
+  </head>
+  <body>
+    <table>
+      <thead>
+        <tr>
+          <th><h1>API Name</h1></th>
+          <th><h1>API Description</h1></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><h2>Wikipedia Search</h2></td>
+          <td>
+            <div class="description">
+              <h3>Returns wikipedia entries for the search term</h3>
+              <input
+                type="text"
+                id="query"
+                placeholder="Add search term"
+                required />
+            </div>
+          </td>
+          <td>
+            <div class="buttonContainer">
+              <button id="wikipedia">Submit</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><h2>weather observation</h2></td>
+          <td>
+            <div class="description">
+              <h3>Returns Latest weather observation for the location</h3>
+              <div class="selectSection">
+                <p>Select Location:</p>
+                <select id="selCoordinate">
+                  <option value="51.5074,-0.1278">London, UK</option>
+                  <option value="40.7128,-74.0060">New York City, USA</option>
+                  <option value="48.8566,2.3522">Paris, France</option>
+                  <option value="35.6895,139.6917">Tokyo, Japan</option>
+                  <option value="55.7558,37.6176">Moscow, Russia</option>
+                  <option value="52.1326,5.291266">
+                    Amsterdam, Netherlands
+                  </option>
+                </select>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="buttonContainer">
+              <button id="weather">Submit</button>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>Row 3, Cell 1</td>
+          <td>Row 3, Cell 2</td>
+          <td>
+            <div class="buttonContainer">
+              <button id="weather">Submit</button>
+            </div>
+          </td>
+        </tr>
+        <tr></tr>
+      </tbody>
+    </table>
+    <div id="output"></div>
+    <script
+      type="application/javascript"
+      src="libs/js/jquery-2.2.3.min.js"></script>
+    <script
+      type="application/javascript"
+      src="libs/js/script.js"
+      defer></script>
+  </body>
+</html>
