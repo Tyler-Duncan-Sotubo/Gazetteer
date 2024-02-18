@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Wikipedia & Weather Guide</title>
+    <link favicon="libs/img/favicon.ico" rel="icon" />
     <link rel="stylesheet" href="libs/css/style.css" />
   </head>
   <body>
@@ -17,6 +18,7 @@
       </thead>
       <tbody>
         <tr>
+          <!-- Wikipedia API -->
           <td><h2>Wikipedia Search</h2></td>
           <td>
             <div class="description">
@@ -35,6 +37,7 @@
           </td>
         </tr>
         <tr>
+          <!-- Weather API -->
           <td><h2>weather observation</h2></td>
           <td>
             <div class="description">
@@ -61,24 +64,58 @@
           </td>
         </tr>
         <tr>
-          <td>Row 3, Cell 1</td>
-          <td>Row 3, Cell 2</td>
+          <!-- Postcode API -->
+          <td><h2>Postcode</h2></td>
+          <td>
+            <div class="description">
+              <h3>returns a list of postal codes in England</h3>
+              <div class="selectSection">
+                <p>Select City:</p>
+                <select id="selPostCode">
+                  <option value="52.486243,-1.890401">Birmingham</option>
+                  <option value="51.454514,-2.58791">Bristol</option>
+                  <option value="52.205276,0.119167">Cambridge</option>
+                  <option value="53.408371,-2.991573">Chester</option>
+                  <option value="52.355518,-1.174320">Coventry</option>
+                  <option value="51.454514,-2.58791">Bristol</option>
+                  <option value="52.916668,-1.466667">Derby, Derbyshire</option>
+                  <option value="53.8008,-1.5491">Harrogate</option>
+                  <option value="52.056499,-2.716000">
+                    Hereford, Herefordshire
+                  </option>
+                  <option value="53.767750,-0.335827">Hull</option>
+                  <option value="53.800003,-1.549999">Huddersfield</option>
+                  <option value="53.800003,-1.549999">Halifax</option>
+                  <option value="51.5074,-0.1278">London</option>
+                  <option value="53.400002,-2.983333">Liverpool</option>
+                  <option value="53.800003,-1.549999">Leeds</option>
+                  <option value="52.630371,-1.122848">Leicester</option>
+                  <option value="53.480949,-2.23743">Manchester</option>
+                  <option value="52.040623,-0.759417">Milton Keynes</option>
+                  <option value="52.416668,-1.549999">Nottingham</option>
+                  <option value="53.800003,-1.549999">Newcastle</option>
+                  <option value="52.406822,-1.519693">Solihull</option>
+                </select>
+              </div>
+            </div>
+          </td>
           <td>
             <div class="buttonContainer">
-              <button id="weather">Submit</button>
+              <button id="postcode">Submit</button>
             </div>
           </td>
         </tr>
         <tr></tr>
       </tbody>
     </table>
+
+    <!-- Output -->
     <div id="output"></div>
+
+    <!-- script -->
     <script
       type="application/javascript"
-      src="libs/js/jquery-2.2.3.min.js"></script>
-    <script
-      type="application/javascript"
-      src="libs/js/script.js"
-      defer></script>
+      src="libs/js/jquery-3.7.1.min.js"></script>
+    <script type="application/javascript" src="libs/js/script.js"></script>
   </body>
 </html>
