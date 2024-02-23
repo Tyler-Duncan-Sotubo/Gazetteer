@@ -6,7 +6,7 @@ $executionStartTime = microtime(true);
 
 $removeInputSpace = str_replace(' ', '+', $_REQUEST['q']);
 
-$url = 'http://api.geonames.org/wikipediaSearchJSON?formatted=true&q=' . $removeInputSpace . '&maxRows=10' . '&username=tyleroftx&style=full';
+$url = 'http://api.geonames.org/wikipediaSearchJSON?formatted=true&q=' . $removeInputSpace . '&maxRows=3' . '&username=tyleroftx&style=full';
 
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);

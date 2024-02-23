@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="libs/css/style.css" />
+    <link rel="stylesheet" href="vendors/leaflet/css/leaflet.css" />
+    <link rel="stylesheet" href="vendors/bootstrap/css/bootstrap.min.css" />
+
+    <!-- leaflet plugins -->
+    <link rel="stylesheet" href="vendors/easyButton/css/easy-button.css" />
+    <link rel="stylesheet" href="vendors/markerCluster/css/MarkerCluster.css" />
+    <link
+      rel="stylesheet"
+      href="vendors/markerCluster/css/MarkerCluster.Default.css" />
+
+    <!-- fontAwesome -->
+    <link rel="stylesheet" href="vendors/fontAwesome/css/all.min.css" />
+    <link rel="stylesheet" href="vendors/fontAwesome/css/fontawesome.min.css" />
+
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="preloader"><p>Loading....</p></div>
+    <div id="selectContainer">
+      <select id="countrySelect" class="form-select shadow-sm"></select>
+    </div>
+    <div id="map"></div>
+
+    <!-- country information modal -->
+    <div
+      id="countryInfo"
+      class="modal fade active"
+      data-bs-backdrop="false"
+      tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow">
+          <div class="modal-header bg-info bg-gradient text-white">
+            <h5 class="modal-title">Country Information</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <table class="table table-striped">
+              <tr>
+                <td class="text-center">
+                  <i class="fas fa-flag fa-2x text-info"></i>
+                </td>
+                <td>
+                  <strong>Country:</strong>
+                </td>
+                <td id="country" class="text-end text-large"></td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fas fa-map fa-2x text-info"></i>
+                </td>
+                <td>
+                  <strong>Continent:</strong>
+                </td>
+                <td id="continent" class="text-end">value</td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-globe fa-2x text-info"></i>
+                </td>
+                <td>
+                  <strong>Country Code:</strong>
+                </td>
+                <td id="country_code" class="text-end">value</td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-money-bill-wave fa-2x text-info"></i>
+                </td>
+                <td>
+                  <strong>Currency:</strong>
+                </td>
+                <td id="currency" class="text-end">value</td>
+              </tr>
+
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-phone fa-2x text-info"></i>
+                </td>
+                <td>
+                  <strong>Calling Code:</strong>
+                </td>
+                <td id="calling" class="text-end">value</td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-road fa-2x text-info"></i>
+                </td>
+                <td>
+                  <strong>Drive on:</strong>
+                </td>
+                <td id="drive" class="text-end">value</td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-road fa-2x text-info"></i>
+                </td>
+                <td>
+                  <strong>Speed-in:</strong>
+                </td>
+                <td id="speed" class="text-end">value</td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-regular fa-clock fa-2x text-info"></i>
+                </td>
+                <td>
+                  <strong>Timezone:</strong>
+                </td>
+                <td id="timezone" class="text-end">value</td>
+              </tr>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-info btn-sm"
+              data-bs-dismiss="modal">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- weather information modal -->
+    <div
+      id="weatherinfo"
+      class="modal fade active"
+      data-bs-backdrop="false"
+      tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow">
+          <div class="modal-header bg-success bg-gradient text-white">
+            <h5 class="modal-title">Weather Update</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <select id="citiesSelect" class="form-select shadow-sm"></select>
+          </div>
+          <div>
+            <div id="today" class="weatherToday"></div>
+            <div id="weatherDays" class="weatherDays"></div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-success btn-sm"
+              data-bs-dismiss="modal">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Currency Converter -->
+    <div
+      id="currencyConverter"
+      class="modal fade active"
+      data-bs-backdrop="false"
+      tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow">
+          <div class="modal-header bg-success bg-gradient text-white">
+            <h5 class="modal-title">Currency Converter</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"></button>
+          </div>
+          <div class="padding-lg">
+            <table class="table padding-lg table-responsive">
+              <tr>
+                <td>
+                  <strong>Currency Name:</strong>
+                </td>
+                <td id="currencyName" class="text-end text-large"></td>
+              </tr>
+              <tr>
+                <td>
+                  <strong>Currency Code:</strong>
+                </td>
+                <td id="currencyCode" class="text-end text-large"></td>
+              </tr>
+              <tr>
+                <td>
+                  <strong>Currency Symbol:</strong>
+                </td>
+                <td id="currencySym" class="text-end text-large"></td>
+              </tr>
+            </table>
+            <div class="currency">
+              <label for="default" id="defaultCurrency">
+                <span id="defaultCurrencyCode">From: GBP</span>
+                <span id="defaultCurrencyName">British Pound</span>
+              </label>
+
+              <input
+                type="number"
+                id="amount"
+                value="1"
+                class="form-control shadow-sm"
+                placeholder="Enter amount to Convert" />
+              <div class="result">
+                <h5
+                  id="currencyResult"
+                  class="text-success margin-left-md"></h5>
+                <h5 id="resultCode" class="margin-left-md"></h5>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-success btn-sm"
+              data-bs-dismiss="modal">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- wikipedia information modal -->
+    <div
+      id="wikipediainfo"
+      class="modal fade active"
+      data-bs-backdrop="false"
+      tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow">
+          <div class="modal-header bg-info bg-gradient text-white">
+            <h5 class="modal-title">Wikipedia Info</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"></button>
+          </div>
+          <div class="modal-body"></div>
+          <div id="wikipedia"></div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-info btn-sm"
+              data-bs-dismiss="modal">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- all the JavaScript goes here -->
+    <!-- Bootstrap JavaScript -->
+    <script
+      type="text/javascript"
+      src="vendors/bootstrap/js/bootstrap.min.js"></script>
+
+    <!-- leaflet JavaScript -->
+    <script type="text/javascript" src="vendors/leaflet/js/leaflet.js"></script>
+    <script
+      type="text/javascript"
+      src="vendors/markerCluster/js/leaflet.markercluster.js"></script>
+    <script
+      type="text/javascript"
+      src="vendors/easyButton/js/easy-button.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script
+      type="text/javascript"
+      src="vendors/jquery/jquery-3.7.1.min.js"></script>
+    <script type="module" defer src="libs/js/script.js"></script>
+  </body>
+</html>

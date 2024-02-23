@@ -3,10 +3,9 @@
 // remove for production
 
 $executionStartTime = microtime(true);
+$_REQUEST['countryCode'];
 
-$removeInputSpace = str_replace(' ', '+', $_REQUEST['q']);
-
-$url = 'http://api.geonames.org/wikipediaSearchJSON?formatted=true&q=' . $removeInputSpace . '&maxRows=10' . '&username=tyleroftx&style=full';
+$url = 'http://api.geonames.org/searchJSON?q=airport&country=' . $_REQUEST['countryCode']  . '&maxRows=10&username=tyleroftx&style=short';
 
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);

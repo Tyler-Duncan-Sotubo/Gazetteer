@@ -4,9 +4,13 @@
 
 $executionStartTime = microtime(true);
 
-$removeInputSpace = str_replace(' ', '+', $_REQUEST['q']);
+$countries = $_REQUEST['country'];
 
-$url = 'http://api.geonames.org/wikipediaSearchJSON?formatted=true&q=' . $removeInputSpace . '&maxRows=10' . '&username=tyleroftx&style=full';
+list($iso, $country) = explode(",", $countries);
+
+$removeInputSpace = str_replace(' ', '+', $country);
+
+$url = 'https://api.opencagedata.com/geocode/v1/json?q=' . $removeInputSpace . '&key=03354c19df174ebfb8e3f5995d41c8e6';
 
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -23,7 +27,7 @@ $output['status']['code'] = "200";
 $output['status']['name'] = "ok";
 $output['status']['description'] = "success";
 $output['status']['returnedIn'] = intval((microtime(true) - $executionStartTime) * 1000) . " ms";
-$output['data'] = $decode['geonames'];
+$output['data'] = $decode['results'];
 
 header('Content-Type: application/json; charset=UTF-8');
 
