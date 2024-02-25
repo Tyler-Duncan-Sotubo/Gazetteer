@@ -1,11 +1,11 @@
 import { convertDate, formatResult } from "./helpers.js";
 
-var osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 10,
   attribution: "© OpenStreetMap",
 });
 
-var osmHOT = L.tileLayer(
+const osmHOT = L.tileLayer(
   "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
   {
     maxZoom: 10,
@@ -13,12 +13,10 @@ var osmHOT = L.tileLayer(
   }
 );
 
-var baseMaps = {
+let baseMaps = {
   Street: osm,
   StreetHOT: osmHOT,
 };
-
-var markers = L.markerClusterGroup();
 
 const myStyle = {
   color: "#4497b2",
@@ -42,27 +40,14 @@ let map = L.map("map", {
   layers: [osm],
 });
 
+// Create a marker cluster group
+let markers = L.markerClusterGroup();
 map.addLayer(markers);
 
+// Add the baseMaps to the map
 let layerControl = L.control.layers(baseMaps).addTo(map);
 
-// ---------------------------> User Location <----------------------------- //
-
-// Function to fetch ISO country code from latitude and longitude
-async function getCountryCodeFromCoordinates(latitude, longitude) {
-  try {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
-    );
-    const data = await response.json();
-    const countryCode = data.address.country_code.toUpperCase();
-    return countryCode;
-  } catch (error) {
-    throw new Error("Unable to fetch ISO country code");
-  }
-}
-
-// Async function to use await with navigator.geolocation and fetch ISO country code
+// ---------------------------> User Location and Current User <----------------------------- //
 (async () => {
   try {
     // Get current position using navigator.geolocation
@@ -70,55 +55,52 @@ async function getCountryCodeFromCoordinates(latitude, longitude) {
       navigator.geolocation.getCurrentPosition(resolve, reject);
     });
 
-    // Get ISO country code from latitude and longitude
-    const countryCode = await getCountryCodeFromCoordinates(
-      position.coords.latitude,
-      position.coords.longitude
-    );
-
+    // Get the latitude and longitude from the position object
     let lat = position.coords.latitude;
     let lng = position.coords.longitude;
 
-    // Display Cities
-    displayCities(countryCode);
-    // Display Airports
-    displayAirports(countryCode);
-    // display borders
-    displayBorders(countryCode);
-    // display weather
-    displayWeather(countryCode);
+    // Get the country from the coordinates
+    $.ajax({
+      url: "libs/php/country.php",
+      type: "POST",
+      dataType: "json",
+      data: {
+        lat: lat,
+        lng: lng,
+        key: "coords",
+      },
+      success: function (result) {
+        // Get the country code and name
+        const c = result.data[0].components.country;
+        const countryCode = result.data[0].components["ISO_3166-1_alpha-2"];
+        const currentCountry = countryCode + "," + c;
 
-    // Fetch ISO country code and return country info from the API OpenCage
-    async function fetchISO() {
-      try {
-        const response = await fetch(`libs/php/getCountrySelect.php`);
-        const data = await response.json();
-        const country = data.data.find(
-          (country) => country.iso === countryCode
-        );
-        const c = country.iso + "," + country.country;
-        $("#countrySelect").val(c);
-        $.ajax({
-          url: "libs/php/getCountryInfo.php",
-          type: "POST",
-          dataType: "json",
-          data: {
-            country: c,
-          },
-          success: function (result) {
-            displayCountryInfo(result.data[0]);
-            displayCurrencyInfo(result.data[0]);
-            displayWikipedia(result.data[0].components.country);
-          },
-          error: function (jqXHR, textStatus, errorThrown) {
-            console.log("Error: " + errorThrown);
-          },
-        });
-      } catch (error) {
-        throw new Error("Unable to fetch ISO country code");
-      }
-    }
-    fetchISO();
+        // Set the country select to the current country
+        $("#countrySelect").val(currentCountry);
+
+        // Display Cities
+        displayCities(countryCode);
+        // Display Airports
+        displayAirports(countryCode);
+        // display borders
+        displayBorders(countryCode);
+        // display weather
+        displayWeather(countryCode);
+        // display country info
+        displayCountryInfo(result.data[0]);
+        // display currency
+        displayCurrencyInfo(result.data[0]);
+        // display wikipedia
+        displayWikipedia(result.data[0].components.country);
+        // send ISO to displayNews function
+        displayNews(countryCode);
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.log("Error: " + errorThrown);
+      },
+    });
+
+    // remove preloader
     $("#preloader").remove();
     // initialize the map on the "map" div with a given center and zoom
     map = map.setView([lat, lng], 7);
@@ -128,7 +110,17 @@ async function getCountryCodeFromCoordinates(latitude, longitude) {
         '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
   } catch (error) {
-    console.error("Error:", error);
+    switch (error.code) {
+      case error.PERMISSION_DENIED:
+        alert("User denied the request for Geolocation.");
+        break;
+      case error.POSITION_UNAVAILABLE:
+        alert("Location information is unavailable.");
+        break;
+      default:
+        alert("An unknown error occurred:", error.message);
+        break;
+    }
   }
 })();
 
@@ -137,13 +129,15 @@ async function getCountryCodeFromCoordinates(latitude, longitude) {
 // Display Cities //
 const displayCities = (code) => {
   $.ajax({
-    url: "libs/php/getCities.php",
+    url: "libs/php/markers.php",
     type: "POST",
     data: {
       countryCode: code,
+      action: "city",
     },
     success: function (result) {
       $.each(result.data, function (index) {
+        // Create a marker
         var Icon = L.icon({
           iconUrl: "img/location-pin.png",
           iconSize: [40, 46], // size of the icon
@@ -154,16 +148,21 @@ const displayCities = (code) => {
             icon: Icon,
           }
         );
+        // Add a popup to the marker
         cityMarker.bindPopup(result.data[index].name);
+
+        // Add mouseover and mouseout events to the marker
         cityMarker.on("mouseover", function (e) {
           this.openPopup();
         });
         cityMarker.on("mouseout", function (e) {
           this.closePopup();
         });
+
+        // Add the marker to the markers layer
         markers.addLayer(cityMarker).addTo(map);
       });
-
+      // Add the markers layer to the map
       layerControl.addOverlay(markers, "Cities & Airports");
     },
     error: function (jqXHR, exception) {
@@ -175,10 +174,11 @@ const displayCities = (code) => {
 // display airports //
 const displayAirports = (code) => {
   $.ajax({
-    url: "libs/php/getAirports.php",
+    url: "libs/php/markers.php",
     type: "POST",
     data: {
       countryCode: code,
+      action: "airport",
     },
     success: function (result) {
       $.each(result.data, function (index) {
@@ -211,10 +211,11 @@ const displayAirports = (code) => {
 // display borders //
 const displayBorders = (code) => {
   $.ajax({
-    url: "libs/php/getBorders.php",
+    url: "libs/php/markers.php",
     type: "POST",
     data: {
       countryCode: code,
+      action: "borders",
     },
     success: function (result) {
       const data = result.border.geometry;
@@ -265,10 +266,11 @@ const displayBorders = (code) => {
 
 const displayWeather = (code) => {
   $.ajax({
-    url: "libs/php/getCities.php",
+    url: "libs/php/markers.php",
     type: "POST",
     data: {
       countryCode: code,
+      action: "city",
     },
     success: function (result) {
       $("#citiesSelect").empty();
@@ -290,10 +292,14 @@ const displayWeather = (code) => {
 };
 
 $("#citiesSelect").change(function () {
+  // get the selected city
   var city = $("#citiesSelect").val();
+
+  // send the selected city to the displayWeather function
   handleWeatherInfo(city);
 });
 
+// Weather Icons
 const weatherIcons = (condition) => {
   switch (condition) {
     case "moderate rain":
@@ -311,19 +317,22 @@ const weatherIcons = (condition) => {
   }
 };
 
+// Weather Info function based on city
 const handleWeatherInfo = (city) => {
   $.ajax({
-    url: "libs/php/getWeather.php",
+    url: "libs/php/modalControllers.php",
     type: "POST",
     dataType: "json",
     data: {
       city: city,
+      action: "weather",
     },
     success: function (result) {
+      //
       $("#today").empty();
       $("#weatherDays").empty();
+      // If no weather data is available
       if (result.data === null) {
-        console.log();
         $("#today").append(
           '<div style="width: 100%;">' +
             "<p style='font-size:3rem; font-weight:bold;'>" +
@@ -332,6 +341,7 @@ const handleWeatherInfo = (city) => {
             "</div>"
         );
       } else {
+        // Display the weather for today
         const today = result.data[0];
         $("#today").append(
           '<div style="width: 100%;">' +
@@ -349,6 +359,7 @@ const handleWeatherInfo = (city) => {
             "</div>"
         );
 
+        // Display the next 6 days weather forecast
         const forecast = result.data.slice(1, 8);
         forecast.forEach((day) => {
           $("#weatherDays").append(
@@ -367,7 +378,6 @@ const handleWeatherInfo = (city) => {
         });
       }
     },
-
     error: function (jqXHR, textStatus, errorThrown) {
       console.log("Error: " + errorThrown);
     },
@@ -376,9 +386,13 @@ const handleWeatherInfo = (city) => {
 
 // --------------------------> Currency Converter <------------------------------- //
 
+// Display Currency Info
 const displayCurrencyInfo = (result) => {
-  $("#amount").val("1");
+  // Clear the currency input and output
+  $("#amount").val("");
   $("#currencyResult").text("0:00");
+
+  // Display the currency code and name
   const currency = result.annotations.currency;
   $("#currencyCode").text(currency.iso_code);
   $("#currencyName").text(currency.name);
@@ -388,15 +402,17 @@ const displayCurrencyInfo = (result) => {
 
 const convertCurrency = (from, to, amount) => {
   $.ajax({
-    url: "libs/php/getCurrency.php",
+    url: "libs/php/modalControllers.php",
     type: "POST",
     dataType: "json",
     data: {
       from: from,
       to: to,
       amount: amount,
+      action: "currency",
     },
     success: function (result) {
+      // Format the result and display it
       const convertedRate = formatResult(result);
       $("#currencyResult").text(convertedRate);
     },
@@ -421,11 +437,12 @@ $("#amount").on("input", function () {
 
 const displayWikipedia = (country) => {
   $.ajax({
-    url: "libs/php/getWikipediaInfo.php",
+    url: "libs/php/modalControllers.php",
     type: "POST",
     dataType: "json",
     data: {
       q: country, // Get the search query
+      action: "wikipedia",
     },
     success: function (result) {
       $("#wikipedia").empty(); // Clear the output div
@@ -477,13 +494,59 @@ const displayWikipedia = (country) => {
   });
 };
 
+// --------------------------> Latest News  <------------------------------- //
+
+const displayNews = (code) => {
+  $.ajax({
+    url: "libs/php/modalControllers.php",
+    type: "POST",
+    dataType: "json",
+    data: {
+      countryCode: code,
+      action: "news",
+    },
+    success: function (result) {
+      $("#news").empty();
+      $.each(result.data, function (index) {
+        const news = result.data[index];
+        console.log(news);
+        $("#news").append(
+          "<div>" +
+            "<h5>" +
+            news.title +
+            "</h5>" +
+            "<p>" +
+            news.source.name +
+            "</p>" +
+            "<a href=" +
+            news.url +
+            " target='_blank'" +
+            ">Read more</a>" +
+            "<hr>" +
+            "</div>"
+        );
+      });
+      if ($("#news").is(":empty")) {
+        $("#news").append("<h2>No news available</h2>");
+      }
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      console.log("Error: " + errorThrown);
+    },
+  });
+};
+
 // --------------------------> Country Select <------------------------------- //
+
 // Get country select options //
 $(document).ready(function () {
   $.ajax({
-    url: "libs/php/getCountrySelect.php",
+    url: "libs/php/country.php",
     type: "POST",
     dataType: "json",
+    data: {
+      key: "select",
+    },
     success: function (result) {
       $.each(result.data, function (index) {
         $("#countrySelect").append(
@@ -505,24 +568,28 @@ $(document).ready(function () {
 
 // Select country and display country info //
 $("#countrySelect").change(function () {
-  var value = $("#countrySelect").val();
-  var code = value.substring(0, 2);
+  const value = $("#countrySelect").val();
+  const code = value.substring(0, 2);
   $.ajax({
-    url: "libs/php/getCountryInfo.php",
+    url: "libs/php/country.php",
     type: "POST",
     dataType: "json",
     data: {
       country: $("#countrySelect").val(),
+      key: "code",
     },
     success: function (result) {
-      // send the result to the displayCountryInfo function
-      displayCountryInfo(result.data[0]);
-
+      // Clear the map layers and markers
       geoBorder.clearLayers();
       markers.clearLayers();
       layerControl.removeLayer(markers);
+
+      // get the coordinates from the result and set the map view
       const coords = result.data[0].geometry;
       map = map.setView([coords.lat, coords.lng], 7.5);
+
+      // send the result to the displayCountryInfo function
+      displayCountryInfo(result.data[0]);
 
       // get return value from displayCities function and send to displayWeather function
       displayCities(code);
@@ -533,11 +600,17 @@ $("#countrySelect").change(function () {
       // send ISO from displayBorders function
       displayBorders(code);
 
+      // send ISO to displayAirports function
       displayAirports(code);
 
+      // send ISO to displayCurrencyInfo function
       displayCurrencyInfo(result.data[0]);
 
+      // send country to displayWikipedia function
       displayWikipedia(result.data[0].components.country);
+
+      // send ISO to displayNews function
+      displayNews(code);
     },
     error: function (jqXHR, textStatus, errorThrown) {
       console.log("Error: " + errorThrown);
@@ -560,7 +633,6 @@ const displayCountryInfo = (result) => {
 };
 
 // --------------------------> Modals <------------------------------- //
-
 L.easyButton("fa-info", function (btn, map) {
   $("#countryInfo").modal("show");
 }).addTo(map);
@@ -575,4 +647,8 @@ L.easyButton("fa-solid fa-wallet", function (btn, map) {
 
 L.easyButton("fa-brands fa-wikipedia-w", function (btn, map) {
   $("#wikipediainfo").modal("show");
+}).addTo(map);
+
+L.easyButton("fa-solid fa-rss", function (btn, map) {
+  $("#newsInfo").modal("show");
 }).addTo(map);
