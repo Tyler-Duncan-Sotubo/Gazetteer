@@ -1,6 +1,11 @@
 <?php
 
+require './apiKeys.php';
+require './function.php';
+
 $request_data = $_REQUEST['key']; // Accessing a specific parameter named 'key'
+
+// Switch statement to determine which function to call
 switch ($request_data) {
     case 'code':
         getCountryByCode();
@@ -15,10 +20,8 @@ switch ($request_data) {
         break;
 }
 
-
 function countrySelect()
 {
-    $executionStartTime = microtime(true);
     $json = json_decode(file_get_contents("../json/countryBorders.geo.json"), true);
 
     // countries array
@@ -36,36 +39,29 @@ function countrySelect()
     usort($countries, function ($item1, $item2) {
         return $item1['name'] <=> $item2['name'];
     });
-
-    $output['status']['code'] = "200";
-    $output['status']['name'] = "ok";
-    $output['status']['description'] = "success";
-    $output['status']['executedIn'] = intval((microtime(true) - $executionStartTime) * 1000) . " ms";
-    $output['data'] = $countries;
-
-    header('Content-Type: application/json; charset=UTF-8');
-
-    echo json_encode($output);
+    // Send response to json handler
+    resJSON($countries);
 }
 
 function getCountryByCoords()
 {
+    // Get the latitude and longitude from the request
     $lat = $_REQUEST['lat'];
     $lng = $_REQUEST['lng'];
-
-    $url = 'https://api.opencagedata.com/geocode/v1/json?q=' . $lat . "," . $lng . '&key=03354c19df174ebfb8e3f5995d41c8e6';
-
+    // Concatenate the url with the latitude, longitude and the api key
+    $url = 'https://api.opencagedata.com/geocode/v1/json?q=' . $lat . "," . $lng . '&key=' . OPENCAGE_API_KEY;
+    // Initialize curl
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_URL, $url);
-
+    // Execute the curl
     $result = curl_exec($ch);
-
+    // Close the curl
     curl_close($ch);
-
+    // Decode the result
     $decode = json_decode($result, true);
-
+    // Send response to json handler
     $output['status']['code'] = "200";
     $output['status']['name'] = "ok";
     $output['status']['description'] = "success";
@@ -83,31 +79,28 @@ function getCountryByCode()
 {
     $countries = $_REQUEST['country'];
 
+    // destructuring the country code and name
     list($iso, $country) = explode(",", $countries);
 
+    // Replace the space with a plus sign
     $removeInputSpace = str_replace(' ', '+', $country);
 
-    $url = 'https://api.opencagedata.com/geocode/v1/json?q=' . $removeInputSpace . '&key=03354c19df174ebfb8e3f5995d41c8e6';
+    // Concatenate the url with the country name and the api key
+    $url = 'https://api.opencagedata.com/geocode/v1/json?q=' . $removeInputSpace . '&key=' . OPENCAGE_API_KEY;
 
+    // Initialize curl
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_URL, $url);
 
+    // Execute the curl
     $result = curl_exec($ch);
 
     curl_close($ch);
-
+    // Decode the result
     $decode = json_decode($result, true);
 
-    $output['status']['code'] = "200";
-    $output['status']['name'] = "ok";
-    $output['status']['description'] = "success";
-    $executionStartTime = microtime(true);
-    $output['status']['returnedIn'] = intval((microtime(true) - $executionStartTime) * 1000) . " ms";
-    $output['data'] = $decode['results'];
-
-    header('Content-Type: application/json; charset=UTF-8');
-
-    echo json_encode($output);
+    // Send response to json handler
+    resHandler($decode, 'results');
 }

@@ -102,6 +102,7 @@ let layerControl = L.control.layers(baseMaps).addTo(map);
 
     // remove preloader
     $("#preloader").remove();
+
     // initialize the map on the "map" div with a given center and zoom
     map = map.setView([lat, lng], 7);
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -509,7 +510,6 @@ const displayNews = (code) => {
       $("#news").empty();
       $.each(result.data, function (index) {
         const news = result.data[index];
-        console.log(news);
         $("#news").append(
           "<div>" +
             "<h5>" +
