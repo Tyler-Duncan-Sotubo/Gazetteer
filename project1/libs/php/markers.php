@@ -14,6 +14,9 @@ switch ($requestData) {
     case 'borders':
         getBorders();
         break;
+    case 'university':
+        getUniversities();
+        break;
     default:
         echo 'Invalid action';
 }
@@ -24,7 +27,7 @@ function getCities()
     // Get the country code from the request
     $_REQUEST['countryCode'];
     // Concatenate the url with the country code and the api key
-    $url = 'http://api.geonames.org/searchJSON?username=tyleroftx&country=' . $_REQUEST['countryCode']  . '&maxRows=15' . '&style=SHORT';
+    $url = 'http://api.geonames.org/searchJSON?username=tyleroftx&country=' . $_REQUEST['countryCode']  . '&maxRows=10' . '&style=LONG';
     // Initialize curl
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -45,7 +48,28 @@ function getAirports()
     // Get the country code from the request
     $_REQUEST['countryCode'];
     // Concatenate the url with the country code and the api key
-    $url = 'http://api.geonames.org/searchJSON?q=airport&country=' . $_REQUEST['countryCode']  . '&maxRows=10&username=tyleroftx&style=short';
+    $url = 'http://api.geonames.org/searchJSON?q=airport&country=' . $_REQUEST['countryCode']  . '&maxRows=10&username=tyleroftx';
+    // Initialize curl
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_URL, $url);
+    // Execute the curl
+    $result = curl_exec($ch);
+    // Close the curl
+    curl_close($ch);
+    // Decode the result and send it to the response handler
+    $decode = json_decode($result, true);
+    // Send the response to the response handler
+    resHandler($decode, 'geonames');
+}
+
+function getUniversities()
+{
+    // Get the country code from the request
+    $_REQUEST['countryCode'];
+    // Concatenate the url with the country code and the api key
+    $url = 'http://api.geonames.org/searchJSON?q=university&country=' . $_REQUEST['countryCode']  . '&maxRows=10&username=tyleroftx';
     // Initialize curl
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
