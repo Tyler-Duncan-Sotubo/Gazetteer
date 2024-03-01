@@ -91,7 +91,6 @@ function getLatestNews()
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-        'Authorization: ' . NEWS_API_KEY, // pass your key here
         'User-Agent: testing'
     ));
     // Execute the curl
@@ -103,5 +102,15 @@ function getLatestNews()
     // Get the first 6 articles
     $articles = array_slice($decode['articles'], 0, 6);
     // sending response to json handler function
-    resJSON($articles);
+
+    $executionStartTime = microtime(true);
+    $output['status']['code'] = "200";
+    $output['status']['name'] = "ok";
+    $output['status']['description'] = "success";
+    $output['status']['returnedIn'] = intval((microtime(true) - $executionStartTime) * 1000) . " ms";
+    $output['data'] = $articles;
+
+    header('Content-Type: application/json; charset=UTF-8');
+
+    echo json_encode($output);
 }

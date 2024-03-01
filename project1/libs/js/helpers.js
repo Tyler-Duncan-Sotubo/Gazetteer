@@ -36,7 +36,7 @@ export default class Helpers {
         console.log("AJAX Error: Request Aborted");
         break;
       case "parsererror":
-        console.log("AJAX Error: JSON Parse Error");
+        console.log("AJAX Error: JSON Parse Error" + status);
         break;
       default:
         console.log("AJAX Error: Unknown Error");
