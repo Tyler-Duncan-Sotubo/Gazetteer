@@ -23,24 +23,4 @@ export default class Helpers {
     const formattedNumber = Number(roundedNumber).toLocaleString();
     return formattedNumber;
   };
-
-  static errorHandler = (status) => {
-    switch (status) {
-      case "timeout":
-        console.log("AJAX Error: Timeout");
-        break;
-      case "error":
-        console.log("AJAX Error: General Error");
-        break;
-      case "abort":
-        console.log("AJAX Error: Request Aborted");
-        break;
-      case "parsererror":
-        console.log("AJAX Error: JSON Parse Error" + status);
-        break;
-      default:
-        console.log("AJAX Error: Unknown Error");
-        break;
-    }
-  };
 }

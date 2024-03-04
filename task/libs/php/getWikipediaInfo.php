@@ -17,14 +17,23 @@ $result = curl_exec($ch);
 
 curl_close($ch);
 
-$decode = json_decode($result, true);
+if (!$result) {
+    $output['status']['code'] = "400";
+    $output['status']['name'] = "Error";
+    $output['status']['description'] = "Request failed";
+    $output['status']['returnedIn'] = intval((microtime(true) - $executionStartTime) * 1000) . " ms";
+    $output['data'] = [];
 
-$output['status']['code'] = "200";
-$output['status']['name'] = "ok";
-$output['status']['description'] = "success";
-$output['status']['returnedIn'] = intval((microtime(true) - $executionStartTime) * 1000) . " ms";
-$output['data'] = $decode['geonames'];
+    echo json_encode($output);
+} else {
+    $decode = json_decode($result, true);
+    $output['status']['code'] = "200";
+    $output['status']['name'] = "ok";
+    $output['status']['description'] = "success";
+    $output['status']['returnedIn'] = intval((microtime(true) - $executionStartTime) * 1000) . " ms";
+    $output['data'] = $decode['geonames'];
 
-header('Content-Type: application/json; charset=UTF-8');
+    header('Content-Type: application/json; charset=UTF-8');
 
-echo json_encode($output);
+    echo json_encode($output);
+}

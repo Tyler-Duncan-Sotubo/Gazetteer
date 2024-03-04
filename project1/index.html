@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="libs/css/style.css" />
+
     <link rel="stylesheet" href="vendors/leaflet/css/leaflet.css" />
     <link rel="stylesheet" href="vendors/bootstrap/css/bootstrap.min.css" />
 
@@ -13,10 +13,19 @@
     <link
       rel="stylesheet"
       href="vendors/markerCluster/css/MarkerCluster.Default.css" />
+    <link
+      rel="stylesheet"
+      href="vendors/extraMarkers/css/leaflet.extra-markers.min.css" />
+
+    <!-- Toastify CSS-->
+    <link rel="stylesheet" href="vendors/toastify/css/toastify.css" />
 
     <!-- fontAwesome -->
     <link rel="stylesheet" href="vendors/fontAwesome/css/all.min.css" />
     <link rel="stylesheet" href="vendors/fontAwesome/css/fontawesome.min.css" />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="libs/css/style.css" />
 
     <!-- add favicon  -->
     <link rel="icon" href="img/favicon.ico" type="image/x-icon" />
@@ -24,7 +33,7 @@
     <title>Gazetteer</title>
   </head>
   <body>
-    <div id="preloader"><p>Loading....</p></div>
+    <div id="preloader"></div>
     <div id="selectContainer">
       <select id="countrySelect" class="form-select shadow-sm"></select>
     </div>
@@ -50,19 +59,29 @@
             <table class="table table-striped">
               <tr>
                 <td class="text-center">
-                  <i class="fas fa-flag fa-2x text-info"></i>
+                  <i class="fa-solid fa-flag fa-2xl text-info"></i>
                 </td>
                 <td>
-                  <strong>Country:</strong>
+                  <strong>Country</strong>
                 </td>
-                <td id="country" class="text-end text-large"></td>
+                <td id="countryName" class="text-end text-large"></td>
+              </tr>
+
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-landmark-flag fa-2xl text-info"></i>
+                </td>
+                <td>
+                  <strong>Capital City</strong>
+                </td>
+                <td id="capital" class="text-end text-large"></td>
               </tr>
               <tr>
                 <td class="text-center">
                   <i class="fas fa-map fa-2x text-info"></i>
                 </td>
                 <td>
-                  <strong>Continent:</strong>
+                  <strong>Continent</strong>
                 </td>
                 <td id="continent" class="text-end">value</td>
               </tr>
@@ -71,55 +90,48 @@
                   <i class="fa-solid fa-globe fa-2x text-info"></i>
                 </td>
                 <td>
-                  <strong>Country Code:</strong>
+                  <strong>Call Code:</strong>
                 </td>
-                <td id="country_code" class="text-end">value</td>
+                <td id="callCode" class="text-end">value</td>
               </tr>
               <tr>
                 <td class="text-center">
                   <i class="fa-solid fa-money-bill-wave fa-2x text-info"></i>
                 </td>
                 <td>
-                  <strong>Currency:</strong>
+                  <strong>Currency</strong>
                 </td>
-                <td id="currency" class="text-end">value</td>
+                <td class="text-end">
+                  <span id="currencyName"></span>
+                  <span id="currencySymbol">value</span>
+                </td>
               </tr>
-
               <tr>
                 <td class="text-center">
-                  <i class="fa-solid fa-phone fa-2x text-info"></i>
+                  <i class="fa-solid fa-person fa-2x text-info"></i>
                 </td>
                 <td>
-                  <strong>Calling Code:</strong>
+                  <strong>Population</strong>
                 </td>
-                <td id="calling" class="text-end">value</td>
+                <td id="population" class="text-end">value</td>
               </tr>
               <tr>
                 <td class="text-center">
                   <i class="fa-solid fa-road fa-2x text-info"></i>
                 </td>
                 <td>
-                  <strong>Drive on:</strong>
+                  <strong>Drive In</strong>
                 </td>
                 <td id="drive" class="text-end">value</td>
               </tr>
               <tr>
                 <td class="text-center">
-                  <i class="fa-solid fa-road fa-2x text-info"></i>
+                  <i class="fa-solid fa-ruler-combined fa-2x text-info"></i>
                 </td>
                 <td>
-                  <strong>Speed-in:</strong>
+                  <strong>Area(km<sup>2</sup>)</strong>
                 </td>
-                <td id="speed" class="text-end">value</td>
-              </tr>
-              <tr>
-                <td class="text-center">
-                  <i class="fa-regular fa-clock fa-2x text-info"></i>
-                </td>
-                <td>
-                  <strong>Timezone:</strong>
-                </td>
-                <td id="timezone" class="text-end">value</td>
+                <td id="area" class="text-end">value</td>
               </tr>
             </table>
           </div>
@@ -190,40 +202,32 @@
             <table class="table padding-lg table-responsive">
               <tr>
                 <td>
-                  <strong>Currency Name:</strong>
-                </td>
-                <td id="currencyName" class="text-end text-large"></td>
-              </tr>
-              <tr>
-                <td>
-                  <strong>Currency Code:</strong>
+                  <strong>Currency Code</strong>
                 </td>
                 <td id="currencyCode" class="text-end text-large"></td>
               </tr>
-              <tr>
-                <td>
-                  <strong>Currency Symbol:</strong>
-                </td>
-                <td id="currencySym" class="text-end text-large"></td>
-              </tr>
             </table>
             <div class="currency">
-              <label for="default" id="defaultCurrency">
-                <span id="defaultCurrencyCode">From: GBP</span>
-                <span id="defaultCurrencyName">British Pound</span>
-              </label>
-
-              <input
-                type="number"
-                id="amount"
-                class="form-control shadow-sm"
-                placeholder="Enter amount to Convert" />
-              <div class="result">
-                <h5
-                  id="currencyResult"
-                  class="text-success margin-left-md"></h5>
-                <h5 id="resultCode" class="margin-left-md"></h5>
-              </div>
+              <form>
+                <div class="form-floating mb-3">
+                  <input
+                    id="fromAmount"
+                    type="number"
+                    class="form-control"
+                    value="1"
+                    min="1"
+                    step="1" />
+                  <label>From USD</label>
+                </div>
+                <div class="form-floating mb-3">
+                  <select id="exchangeRate" class="form-select"></select>
+                  <label for="exchangeRate">Convert to</label>
+                </div>
+                <div class="form-floating">
+                  <p id="toAmount" class="form-control"></p>
+                  <label for="toAmount">Result</label>
+                </div>
+              </form>
             </div>
           </div>
           <div class="modal-footer">
@@ -313,6 +317,15 @@
     <script
       type="text/javascript"
       src="vendors/easyButton/js/easy-button.js"></script>
+    <script
+      type="text/javascript"
+      src="vendors/extraMarkers/js/leaflet.extra-markers.min.js"></script>
+
+    <!-- Numeral JavaScript -->
+    <script src="vendors/numeral/numeral.min.js"></script>
+
+    <!-- Toastify JavaScript -->
+    <script src="vendors/toastify/js/toastify.js"></script>
 
     <!-- Custom JavaScript -->
     <script

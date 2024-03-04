@@ -38,9 +38,9 @@ export default class UiLogic {
         '<div style="width: 100%;">' +
           "<h5>Today's Weather</h5>" +
           "<p style='font-size:3rem; font-weight:bold;'>" +
-          today.temp.max +
+          Math.ceil(today.temp.max) +
           "°C</p>" +
-          "<p style='font-size:1rem; font-weight:bold;'>" +
+          "<p style='font-size:1rem; font-weight:bold; html-transform: capitalize;'>" +
           today.weather[0].description +
           "</p>" +
           "</div> <div style='width: 100%;'>" +
@@ -53,13 +53,13 @@ export default class UiLogic {
       const forecast = result.data.slice(1, 8);
       forecast.forEach((day) => {
         $("#weatherDays").append(
-          "<div>" +
+          "<div class='d-flex flex-column align-items-center'>" +
             "<p>" +
             Helpers.convertDate(day.dt) +
             "</p>" +
-            "<p>" +
-            day.temp.max +
-            "°C</p>" +
+            "<h5>" +
+            Math.ceil(day.temp.max) +
+            "°C</h5>" +
             "<img src='" +
             UiLogic.weatherIcons(day.weather[0].description) +
             "'>" +
@@ -83,19 +83,16 @@ export default class UiLogic {
 
   // Display the currency code and name
   static displayCurrencyInfo(result) {
-    // Clear the currency input and output
-    $("#amount").val("");
-    $("#currencyResult").text("0:00");
+    // Get Currency Name
+    const currencyCode = Object.keys(result.currencies)[0];
+    const currencyInfo = result.currencies[currencyCode];
 
-    // Display the currency code and name
-    const currency = result.annotations.currency;
-    $("#currencyCode").text(currency.iso_code);
-    $("#currencyName").text(currency.name);
-    $("#currencySym").text(currency.symbol);
-    $("#resultCode").text(currency.iso_code);
+    $("#currencyCode").html(currencyCode);
+    $("#currencySym").html(currencyInfo.symbol);
+    $("#resultCode").html(currencyCode);
   }
 
-  static displayWeatherInfo(object, country) {
+  static displayWikipediaInfo(object, country) {
     if (object.title === country) {
       // Create a div element to represent each object
       const $mainDiv = $('<div class="resultContainer"></div>'); // Create a div element to hold the object properties
@@ -108,13 +105,12 @@ export default class UiLogic {
       // Populate the div with object properties
       $rightDiv.append("<p>" + object.summary + "</p>"); // Append the summary to the right-div
       $rightDiv.append(
-        "<p>URL: <a href=" +
+        " <a href=" +
           "https://" +
           object.wikipediaUrl +
           " target='_blank'" +
           ">" +
-          object.title +
-          "</a></p>"
+          "<p>Read More</p></a>"
       ); // Append the URL to the right-div
       $leftDiv.append($image); // Append the image to the left-div
       // Append the div to the to main div
@@ -128,32 +124,63 @@ export default class UiLogic {
   }
 
   static displayCountryInfo(result) {
-    let countryInfo = result;
-    $("#country").text(countryInfo.components.country);
-    $("#continent").text(countryInfo.components.continent);
-    const countryCode = countryInfo.components.country_code.toUpperCase();
-    $("#country_code").text(countryCode);
-    $("#timezone").text(countryInfo.annotations.timezone.name);
-    $("#currency").text(countryInfo.annotations.currency.name);
-    $("#calling").text(countryInfo.annotations.callingcode);
-    $("#drive").text(countryInfo.annotations.roadinfo.drive_on);
-    $("#speed").text(countryInfo.annotations.roadinfo.speed_in);
+    // Get Currency Name
+    const currencyCode = Object.keys(result.currencies)[0];
+    const currencyInfo = result.currencies[currencyCode];
+    const name = currencyInfo.name;
+    const symbol = currencyInfo.symbol;
+
+    const countryName = result.name.common;
+    let callCode;
+    if (countryName === "Russia" || countryName == "United States") {
+      callCode = result.idd.root;
+    } else {
+      callCode = result.idd.root + result.idd.suffixes[0];
+    }
+    $("#countryName").html(countryName);
+    $("#capital").html(result.capital[0]);
+    $("#continent").html(result.continents[0]);
+    $("#callCode").html(callCode);
+    $("#population").html(numeral(result.population).format("0,0"));
+    $("#area").html(numeral(result.area).format("0,0"));
+    $("#drive").html(result.car.side);
+    $("#currencyName").html(name);
+    $("#currencySymbol").html(symbol);
   }
 
   static displayNewsInfo(news) {
+    let image;
+    if (news.image_url == null) {
+      image = "img/news.avif";
+    } else {
+      image = news.image_url;
+    }
+
+    let trimmedTitle = "";
+
+    if (news.title) {
+      trimmedTitle =
+        news.title.length > 60
+          ? news.title.substring(0, 60) + "..."
+          : news.title;
+    }
+
     $("#news").append(
-      "<div>" +
-        "<h5>" +
-        news.title +
-        "</h5>" +
-        "<p>" +
-        news.source.name +
+      "<div class='d-flex' style='margin-bottom: 20px'>" +
+        "<img src='" +
+        image +
+        "' width='150' height='100' style='margin-right: 20px'>" +
+        "<div>" +
+        "<a href='" +
+        news.link +
+        "' class='fw-bold fs-6 html-black ' target='_blank'" +
+        ">" +
+        trimmedTitle +
+        "</a>" +
+        "<p class='text-capitalize'>" +
+        news.source_id +
         "</p>" +
-        "<a href=" +
-        news.url +
-        " target='_blank'" +
-        ">Read more</a>" +
-        "<hr>" +
+        "</div>" +
         "</div>"
     );
   }

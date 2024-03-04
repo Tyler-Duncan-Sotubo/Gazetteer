@@ -52,13 +52,44 @@ map.addLayer(markers);
       },
       success: function (result) {
         // Get the country code and name
-        const c = result.data[0].components.country;
+        const country = result.data[0].components.country;
         const countryCode = result.data[0].components["ISO_3166-1_alpha-2"];
-        const currentCountry = countryCode + "," + c;
-
         // Set the country select to the current country
-        $("#countrySelect").val(currentCountry);
+        $("#countrySelect").val(countryCode);
+        $("#countrySelect option:selected").text(country);
 
+        $("#exchangeRate").val(result.data[0].annotations.currency.iso_code);
+        $("#exchangeRate option:selected").text(
+          result.data[0].annotations.currency.name
+        );
+
+        console.log(result.data[0]);
+
+        if (result.status.code == 200) {
+          $.ajax({
+            url: "libs/php/getCountryInfo.php",
+            type: "POST",
+            dataType: "json",
+            data: {
+              countryCode: countryCode,
+            },
+            success: function (result) {
+              if (result.status.code == 200) {
+                // display country info
+                UiLogic.displayCountryInfo(result.data[0]);
+                // display currency
+                UiLogic.displayCurrencyInfo(result.data[0]);
+              } else {
+                showToast("Error retrieving country data", 4000, false);
+              }
+            },
+            error: function (jqXHR, status, errorThrown) {
+              showToast("Error retrieving country data", 4000, false);
+            },
+          });
+        }
+        //calculate exchange rate
+        calResult("USD", result.data[0].annotations.currency.iso_code);
         // Display Cities
         displayCities(countryCode);
         // Display Airports
@@ -68,18 +99,14 @@ map.addLayer(markers);
         // display borders
         displayBorders(countryCode);
         // display weather
-        displayWeather(countryCode);
-        // display country info
-        UiLogic.displayCountryInfo(result.data[0]);
-        // display currency
-        UiLogic.displayCurrencyInfo(result.data[0]);
+        displayWeather(countryCode, country);
         // display wikipedia
         handleWikipedia(result.data[0].components.country);
         // send ISO to handleNews function
         handleNews(countryCode);
       },
       error: function (jqXHR, status, errorThrown) {
-        Helpers.errorHandler(status);
+        showToast("Error retrieving country data", 4000, false);
       },
     });
 
@@ -93,17 +120,6 @@ map.addLayer(markers);
       attribution:
         '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
-    // Create a marker
-    var Icon = L.icon({
-      iconUrl: "img/Home.png",
-      iconSize: [45, 42], // size of the icon
-    });
-    L.marker([lat, lng], {
-      icon: Icon,
-    })
-      .addTo(map)
-      .bindPopup("You are here")
-      .openPopup();
     // handle Errors
   } catch (error) {
     switch (error.code) {
@@ -131,178 +147,157 @@ const myStyle = {
 };
 
 // -----------> Marker GeoJSON <------------ //
-function onEachFeature(feature, layer) {
-  layer.bindPopup(feature.properties.name);
-  layer.on("mouseover", function (e) {
-    this.openPopup();
-  });
-  layer.on("mouseout", function (e) {
-    this.closePopup();
-  });
-}
 
 // Create a GeoJSON layer for Borders
 let geoBorder = L.geoJSON([], {
   onEachFeature: function (feature, layer) {
-    layer.bindPopup(feature.properties.name);
+    if (feature.properties && feature.properties.name) {
+      layer.bindPopup(feature.properties.name);
+    }
   },
   style: myStyle,
 });
 
-// Create a GeoJSON layer for Universities
-let uniGeoJson = L.geoJSON([], {
-  onEachFeature: onEachFeature,
-  pointToLayer: function (feature, latlng) {
-    var Icon = L.icon({
-      iconUrl: "img/school.png",
-      iconSize: [45, 42], // size of the icon
-    });
-    return L.marker(latlng, { icon: Icon });
+var airports = L.markerClusterGroup({
+  polygonOptions: {
+    fillColor: "#fff",
+    color: "#000",
+    weight: 2,
+    opacity: 1,
+    fillOpacity: 0.5,
   },
+}).addTo(map);
+
+var cities = L.markerClusterGroup({
+  polygonOptions: {
+    fillColor: "#fff",
+    color: "#000",
+    weight: 2,
+    opacity: 1,
+    fillOpacity: 0.5,
+  },
+}).addTo(map);
+
+var universities = L.markerClusterGroup({
+  polygonOptions: {
+    fillColor: "#fff",
+    color: "#000",
+    weight: 2,
+    opacity: 1,
+    fillOpacity: 0.5,
+  },
+}).addTo(map);
+
+var airportIcon = L.ExtraMarkers.icon({
+  prefix: "fa",
+  icon: "fa-plane",
+  iconColor: "black",
+  markerColor: "white",
+  shape: "square",
 });
 
-// Create a GeoJSON layer for Airports
-let airportJson = L.geoJSON([], {
-  onEachFeature: onEachFeature,
-  pointToLayer: function (feature, latlng) {
-    var Icon = L.icon({
-      iconUrl: "img/airport.png",
-      iconSize: [45, 42], // size of the icon
-    });
-    return L.marker(latlng, { icon: Icon });
-  },
+var cityIcon = L.ExtraMarkers.icon({
+  prefix: "fa",
+  icon: "fa-city",
+  markerColor: "green",
+  shape: "square",
 });
 
-// Create a GeoJSON layer for Cities
-let cityJson = L.geoJSON([], {
-  onEachFeature: onEachFeature,
-  pointToLayer: function (feature, latlng) {
-    var Icon = L.icon({
-      iconUrl: "img/location.png",
-      iconSize: [45, 42], // size of the icon
-    });
-    return L.marker(latlng, { icon: Icon });
-  },
+var uniIcons = L.ExtraMarkers.icon({
+  prefix: "fa",
+  icon: "fa-school",
+  markerColor: "orange",
+  shape: "square",
 });
 
 let overlayMaps = {
   Borders: geoBorder,
-  Universities: uniGeoJson,
-  Airports: airportJson,
-  Cities: cityJson,
+  Airports: airports,
+  Cities: cities,
+  Universities: universities,
 };
 
 // Add the baseMaps & overLayMaps to the map
 L.control.layers(baseMaps, overlayMaps).addTo(map);
 
-// Reusable function to get the points from data array on each api call
-const getPoints = (result) => {
-  const featured = [];
-  $.each(result.data, function (index) {
-    featured.push({
-      type: "Feature",
-      geometry: {
-        type: "Point",
-        coordinates: [result.data[index].lng, result.data[index].lat],
-      },
-      properties: {
-        name: result.data[index].name,
-      },
-    });
-  });
-  return featured;
-};
-
 // Display Cities //
 const displayCities = (code) => {
   $.ajax({
-    url: "libs/php/markers.php",
+    url: "libs/php/markers/getCities.php",
     type: "POST",
     data: {
       countryCode: code,
-      action: "city",
     },
     success: function (result) {
-      // get the points from the result
-      const featured = getPoints(result);
-      // create a GeoJSON layer
-      const cities = {
-        type: "FeatureCollection",
-        features: featured,
-      };
-      // add the GeoJSON layer to the map
-      cityJson.addData({
-        type: "FeatureCollection",
-        features: cities.features,
-      });
-      // add the markers to the map
-      markers.addLayer(cityJson).addTo(map);
+      if (result.status.code == 200) {
+        result.data.forEach(function (item) {
+          L.marker([item.lat, item.lng], { icon: cityIcon })
+            .bindTooltip(
+              "<div class='col text-center'><strong>" +
+                item.name +
+                "</strong><br><i>(" +
+                numeral(item.population).format("0,0") +
+                ")</i></div>",
+              { direction: "top", sticky: true }
+            )
+            .addTo(cities);
+        });
+      } else {
+        showToast("Error retrieving city data", 4000, false);
+      }
     },
     error: function (jqXHR, status, errorThrown) {
-      // handle errors
-      Helpers.errorHandler(status);
+      showToast("Error retrieving city data", 4000, false);
     },
   });
 };
-
 // display airports //
 const displayAirports = (code) => {
   $.ajax({
-    url: "libs/php/markers.php",
+    url: "libs/php/markers/getAirports.php",
     type: "POST",
     data: {
       countryCode: code,
       action: "airport",
     },
     success: function (result) {
-      // get the points from the result
-      const featured = getPoints(result);
-      // create a GeoJSON layer
-      const airports = {
-        type: "FeatureCollection",
-        features: featured,
-      };
-      // add the GeoJSON layer to the map
-      airportJson.addData({
-        type: "FeatureCollection",
-        features: airports.features,
-      });
-      // add the markers to the map
-      markers.addLayer(airportJson).addTo(map);
+      if (result.status.code == 200) {
+        result.data.forEach(function (item) {
+          L.marker([item.lat, item.lng], { icon: airportIcon })
+            .bindTooltip(item.name, { direction: "top", sticky: true })
+            .addTo(airports);
+        });
+      } else {
+        showToast("Error retrieving airport data", 4000, false);
+      }
     },
     error: function (jqXHR, status, errorThrown) {
-      // handle errors
-      Helpers.errorHandler(status);
+      showToast("Error retrieving airport data", 4000, false);
     },
   });
 };
-// display airport
 
 const displayUniversities = (code) => {
   $.ajax({
-    url: "libs/php/markers.php",
+    url: "libs/php/markers/getUniversities.php",
     type: "POST",
     data: {
       countryCode: code,
       action: "university",
     },
     success: function (result) {
-      // get the points from the result
-      const featured = getPoints(result);
-      // create a GeoJSON layer
-      const Universities = {
-        type: "FeatureCollection",
-        features: featured,
-      };
-      // add the GeoJSON layer to the map
-      uniGeoJson.addData({
-        type: "FeatureCollection",
-        features: Universities.features,
-      });
-      markers.addLayer(uniGeoJson).addTo(map);
+      if (result.status.code == 200) {
+        result.data.forEach(function (item) {
+          L.marker([item.lat, item.lng], { icon: uniIcons })
+            .bindTooltip(item.name, { direction: "top", sticky: true })
+            .addTo(universities);
+        });
+      } else {
+        showToast("Error retrieving university data", 4000, false);
+      }
     },
     error: function (jqXHR, status, errorThrown) {
-      Helpers.errorHandler(status);
+      showToast("Error retrieving university data", 4000, false);
     },
   });
 };
@@ -310,65 +305,66 @@ const displayUniversities = (code) => {
 // display borders //
 const displayBorders = (code) => {
   $.ajax({
-    url: "libs/php/markers.php",
+    url: "libs/php/getBorders.php",
     type: "POST",
     data: {
       countryCode: code,
       action: "borders",
     },
     success: function (result) {
-      const data = result.border.geometry;
-      let borders = [];
-      // get the coordinates from the result
-      if (data.type === "MultiPolygon") {
-        data.coordinates.forEach((poly) => {
-          let coords = [];
-          poly[0].forEach((coord) => {
-            const lat = coord[1];
-            const lng = coord[0];
-            coords.push([lng, lat]);
-          });
-          // add the coordinates to the borders array
-          borders.push(coords);
-        });
-      } else {
+      if (result.status.code == 200) {
+        const data = result.border.geometry;
+        let borders = [];
         // get the coordinates from the result
-        data.coordinates[0].forEach((coord) => {
-          const lng = coord[0];
-          const lat = coord[1];
-          // add the coordinates to the borders array
-          borders.push([lng, lat]);
+        if (data.type === "MultiPolygon") {
+          data.coordinates.forEach((poly) => {
+            let coords = [];
+            poly[0].forEach((coord) => {
+              const lat = coord[1];
+              const lng = coord[0];
+              coords.push([lng, lat]);
+            });
+            // add the coordinates to the borders array
+            borders.push(coords);
+          });
+        } else {
+          // get the coordinates from the result
+          data.coordinates[0].forEach((coord) => {
+            const lng = coord[0];
+            const lat = coord[1];
+            // add the coordinates to the borders array
+            borders.push([lng, lat]);
+          });
+        }
+        const border = [
+          {
+            type: "Feature",
+            geometry: {
+              type: data.type,
+              coordinates: [borders],
+            },
+          },
+        ];
+        geoBorder.addData({
+          type: "FeatureCollection",
+          features: border,
         });
+        geoBorder.addTo(map);
+        map.fitBounds(geoBorder.getBounds());
+      } else {
+        showToast("Error retrieving border data", 4000, false);
       }
-      const border = [
-        {
-          type: "Feature",
-          properties: {
-            popupContent: "",
-          },
-          geometry: {
-            type: data.type,
-            coordinates: [borders],
-          },
-        },
-      ];
-      geoBorder.addData({
-        type: "FeatureCollection",
-        features: border,
-      });
-      geoBorder.addTo(map);
-      map.fitBounds(geoBorder.getBounds());
     },
     error: function (jqXHR, status, errorThrown) {
-      Helpers.errorHandler(status);
+      showToast("Error retrieving border data", 4000, false);
     },
   });
 };
 
 // --------------------------> Weather & Weather Select <------------------------------- //
-const displayWeather = (code) => {
+const displayWeather = (code, country) => {
   $.ajax({
-    url: "libs/php/markers.php",
+    url: "libs/php/markers/getCities.php",
     type: "POST",
     data: {
       countryCode: code,
@@ -376,11 +372,19 @@ const displayWeather = (code) => {
     },
     success: function (result) {
       $("#citiesSelect").empty();
-      handleWeatherInfo(result.data[0].name);
-      UiLogic.displayWeatherCities(result);
+      if (result.status.code == 200) {
+        const filtered = result.data.filter((city) => city.name !== country);
+        const cities = {
+          data: filtered,
+        };
+        handleWeatherInfo(cities.data[0].name);
+        UiLogic.displayWeatherCities(cities);
+      } else {
+        showToast("Error retrieving city data", 4000, false);
+      }
     },
     error: function (jqXHR, status, errorThrown) {
-      Helpers.errorHandler(status);
+      showToast("Error retrieving city data", 4000, false);
     },
   });
 };
@@ -395,78 +399,130 @@ $("#citiesSelect").change(function () {
 // Weather Info function based on city
 const handleWeatherInfo = (city) => {
   $.ajax({
-    url: "libs/php/modalControllers.php",
+    url: "libs/php/modals/getWeather.php",
     type: "POST",
     dataType: "json",
     data: {
       city: city,
-      action: "weather",
     },
     success: function (result) {
-      UiLogic.displayWeather(result);
+      if (result.status.code == 200) {
+        UiLogic.displayWeather(result);
+      } else {
+        showToast("Error retrieving weather data", 4000, false);
+      }
     },
     error: function (jqXHR, status, errorThrown) {
-      Helpers.errorHandler(status);
+      showToast("Error retrieving weather data", 4000, false);
     },
   });
 };
 
 // --------------------------> Currency <------------------------------- //
-const convertCurrency = (from, to, amount) => {
+
+$("#exchangeRate").change(function () {
+  $("#fromAmount").val(1);
+  const from = "USD";
+  const to = $("#exchangeRate").val();
+  $("#currencyCode").html(to);
+  calResult(from, to);
+});
+
+$("#fromAmount").on("keyup", function () {
+  const from = "USD";
+  const to = $("#exchangeRate").val();
+  const amount = $("#fromAmount").val();
+  calResult(from, to, amount);
+});
+
+$("#fromAmount").on("change", function () {
+  const from = "USD";
+  const to = $("#exchangeRate").val();
+  const amount = $("#fromAmount").val();
+  calResult(from, to, amount);
+});
+
+const calResult = (from, to, amount = 1) => {
   $.ajax({
-    url: "libs/php/modalControllers.php",
+    url: "libs/php/modals/getCurrency.php",
     type: "POST",
     dataType: "json",
     data: {
       from: from,
       to: to,
       amount: amount,
-      action: "currency",
     },
     success: function (result) {
-      // Format the result and display it
-      const convertedRate = Helpers.formatResult(result);
-      $("#currencyResult").text(convertedRate);
+      if (result.status.code == 200) {
+        const convertedRate = Helpers.formatResult(result.data);
+        $("#toAmount").html(convertedRate);
+      } else {
+        showToast("Error retrieving currency data", 4000, false);
+      }
     },
     error: function (jqXHR, status, errorThrown) {
-      Helpers.errorHandler(status);
+      showToast("Error retrieving currency data", 4000, false);
     },
   });
 };
 
-$("#amount").on("input", function () {
-  const inputValue = $(this).val();
-  const defaultCurrency = "GBP";
-  const to = $("#currencyCode").text();
-  let amount = inputValue;
-  if (inputValue === "" || inputValue === 0) {
-    amount = 1;
-  }
-  convertCurrency(defaultCurrency, to, amount);
-});
-
-// --------------------------> Wikipedia <------------------------------- //
-const handleWikipedia = (country) => {
+// currency select
+$("document").ready(function () {
   $.ajax({
-    url: "libs/php/modalControllers.php",
+    url: "libs/php/modals/getCurrencySelect.php",
     type: "POST",
     dataType: "json",
     data: {
-      q: country, // Get the search query
-      action: "wikipedia",
+      key: "select",
+    },
+    success: function (result) {
+      if (result.status.code == 200) {
+        result.data[0].forEach(function (item) {
+          $("#exchangeRate").append(
+            '<option value="' +
+              item.currencyCode +
+              '">' +
+              item.name +
+              "</option>"
+          );
+        });
+      } else {
+        showToast("Error retrieving currency data", 4000, false);
+      }
+    },
+    error: function (jqXHR, status, errorThrown) {
+      showToast("Error retrieving currency data", 4000, false);
+    },
+  });
+});
+
+// --------------------------> Wikipedia <------------------------------- //
+
+const handleWikipedia = (country) => {
+  $.ajax({
+    url: "libs/php/modals/getWikipedia.php",
+    type: "POST",
+    dataType: "json",
+    data: {
+      q: country, // Get the search query,
     },
     success: function (result) {
       $("#wikipedia").empty();
       // Loop through the result and create a div element for each object
-      $.each(result["data"], function (index, object) {
-        UiLogic.displayWeatherInfo(object, country);
-      });
+      if (result.status.code == 200) {
+        $.each(result["data"], function (index, object) {
+          UiLogic.displayWikipediaInfo(object, country);
+        });
+      } else {
+        showToast("Error retrieving wikipedia data", 4000, false);
+      }
+      // If the wikipedia div is empty, append a message
       if ($("#wikipedia").is(":empty")) {
         $("#wikipedia").append("<h5>No Wikipedia data available</h5>");
       }
     },
     error: function (jqXHR, status, errorThrown) {
-      Helpers.errorHandler(status);
+      showToast("Error retrieving wikipedia data", 4000, false);
     },
   });
 };
@@ -474,25 +530,28 @@ const handleWikipedia = (country) => {
 // --------------------------> Latest News  <------------------------------- //
 const handleNews = (code) => {
   $.ajax({
-    url: "libs/php/modalControllers.php",
+    url: "libs/php/modals/getNews.php",
     type: "POST",
     dataType: "json",
     data: {
       countryCode: code,
-      action: "news",
     },
     success: function (result) {
       $("#news").empty();
-      $.each(result.data, function (index) {
-        const news = result.data[index];
-        UiLogic.displayNewsInfo(news);
-      });
+      if (result.status.code == 200) {
+        $.each(result.data, function (index) {
+          const news = result.data[index];
+          UiLogic.displayNewsInfo(news);
+        });
+      } else {
+        showToast("Error retrieving news data", 4000, false);
+      }
       if ($("#news").is(":empty")) {
         $("#news").append("<h2>No news available</h2>");
       }
     },
     error: function (jqXHR, status, errorThrown) {
-      Helpers.errorHandler(status);
+      showToast("Error retrieving news data", 4000, false);
     },
   });
 };
@@ -508,72 +567,101 @@ $(document).ready(function () {
       key: "select",
     },
     success: function (result) {
-      $.each(result.data, function (index) {
-        $("#countrySelect").append(
-          '<option value="' +
-            result.data[index].iso +
-            "," +
-            result.data[index].country +
-            '">' +
-            result.data[index].country +
-            "</option>"
-        );
-      });
+      if (result.status.code == 200) {
+        $.each(result.data, function (index) {
+          $("#countrySelect").append(
+            '<option value="' +
+              result.data[index].iso +
+              '">' +
+              result.data[index].country +
+              "</option>"
+          );
+        });
+      } else {
+        showToast("Error retrieving country data", 4000, false);
+      }
     },
     error: function (jqXHR, status, errorThrown) {
-      Helpers.errorHandler(status);
+      showToast("Error retrieving country data", 4000, false);
     },
   });
 });
 
 // Select country and display country info //
 $("#countrySelect").change(function () {
-  const value = $("#countrySelect").val();
-  const code = value.substring(0, 2);
+  let countryCode = $("#countrySelect").val();
   $.ajax({
-    url: "libs/php/country.php",
+    url: "libs/php/getCountryInfo.php",
     type: "POST",
     dataType: "json",
     data: {
-      country: $("#countrySelect").val(),
-      key: "code",
+      countryCode: countryCode,
     },
     success: function (result) {
+      // Clear the select options
+      $("#exchangeRate").empty();
+      $("#exchangeRate option:selected").empty();
+
       // Clear the map layers and markers
       markers.clearLayers();
+      cities.clearLayers();
+      airports.clearLayers();
+      universities.clearLayers();
       geoBorder.clearLayers();
-      cityJson.clearLayers();
-      airportJson.clearLayers();
-      uniGeoJson.clearLayers();
-      // get the coordinates from the result and set the map view
-      const coords = result.data[0].geometry;
-      map = map.setView([coords.lat, coords.lng], 7.5);
-      // send the result to the UiLogic.displayCountryInfo function
-      UiLogic.displayCountryInfo(result.data[0]);
-      // get return value from displayCities function and send to displayWeather function
-      displayCities(code);
-      // send cities to displayWeather function
-      displayWeather(code);
-      // send ISO from displayBorders function
-      displayBorders(code);
-      // send ISO to displayAirports function
-      displayAirports(code);
-      // send ISO to Ui.displayCurrencyInfo function
-      UiLogic.displayCurrencyInfo(result.data[0]);
-      // send country to handleWikipedia function
-      handleWikipedia(result.data[0].components.country);
-      // send ISO to handleNews function
-      handleNews(code);
-      // send ISO to displayUniversities function
-      displayUniversities(code);
+      if (result.status.code == 200) {
+        // get the coordinates from the result and set the map view
+        map = map.setView(result.data[0].latlng, 7.5);
+
+        // send the result to the UiLogic.displayCountryInfo function
+        UiLogic.displayCountryInfo(result.data[0]);
+
+        // send the ISO to displayCities function
+        displayCities(countryCode);
+
+        // send cities to displayWeather function
+        displayWeather(countryCode, result.data[0].name.common);
+
+        // send ISO from displayBorders function
+        displayBorders(countryCode);
+
+        // send ISO to displayAirports function
+        displayAirports(countryCode);
+
+        // send ISO to Ui.displayCurrencyInfo function
+        UiLogic.displayCurrencyInfo(result.data[0]);
+
+        // send country to handleWikipedia function
+        handleWikipedia(result.data[0].name.common);
+
+        // send ISO to handleNews function
+        handleNews(countryCode);
+
+        // send ISO to displayUniversities function
+        displayUniversities(countryCode);
+
+        // get Currency Name and Code of selected country
+        const currencyCode = Object.keys(result.data[0].currencies)[0];
+        const currencyInfo = result.data[0].currencies[currencyCode];
+        const name = currencyInfo.name;
+
+        // set the currency select to the selected country
+        $("#exchangeRate").val(currencyCode);
+        $("#exchangeRate option:selected").text(name);
+
+        // calculate exchange rate
+        calResult("USD", currencyCode);
+      } else {
+        showToast("Error retrieving country data", 4000, false);
+      }
     },
     error: function (jqXHR, status, errorThrown) {
-      Helpers.errorHandler(status);
+      showToast("Error retrieving country data", 4000, false);
     },
   });
 });
 
 // --------------------------> Modals <------------------------------- //
+
 L.easyButton("fa-info", function (btn, map) {
   $("#countryInfo").modal("show");
 }).addTo(map);
@@ -593,3 +681,21 @@ L.easyButton("fa-brands fa-wikipedia-w", function (btn, map) {
 L.easyButton("fa-solid fa-rss", function (btn, map) {
   $("#newsInfo").modal("show");
 }).addTo(map);
+
+// --------------------------> Toast <------------------------------- //
+
+function showToast(message, duration) {
+  Toastify({
+    text: message,
+    duration: duration,
+    newWindow: true,
+    close: true,
+    gravity: "top", // `top` or `bottom`
+    position: "right", // `left`, `center` or `right`
+    stopOnFocus: true, // Prevents dismissing of toast on hover
+    style: {
+      background: "linear-gradient(to right, #ff0000, #b30000)",
+    },
+    onClick: function () {}, // Callback after click
+  }).showToast();
+}
