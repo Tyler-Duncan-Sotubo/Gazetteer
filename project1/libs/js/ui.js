@@ -130,13 +130,18 @@ export default class UiLogic {
     const name = currencyInfo.name;
     const symbol = currencyInfo.symbol;
 
+    // Get the country name
     const countryName = result.name.common;
+
+    // Get the call code
     let callCode;
     if (countryName === "Russia" || countryName == "United States") {
       callCode = result.idd.root;
     } else {
       callCode = result.idd.root + result.idd.suffixes[0];
     }
+
+    // Display the country information
     $("#countryName").html(countryName);
     $("#capital").html(result.capital[0]);
     $("#continent").html(result.continents[0]);
@@ -150,6 +155,7 @@ export default class UiLogic {
 
   static displayNewsInfo(news) {
     let image;
+    // Check if the image is null
     if (news.image_url == null) {
       image = "img/news.avif";
     } else {
@@ -157,31 +163,34 @@ export default class UiLogic {
     }
 
     let trimmedTitle = "";
-
+    // Check if the title is greater than 60 characters
     if (news.title) {
       trimmedTitle =
         news.title.length > 60
           ? news.title.substring(0, 60) + "..."
           : news.title;
-    }
 
-    $("#news").append(
-      "<div class='d-flex' style='margin-bottom: 20px'>" +
-        "<img src='" +
-        image +
-        "' width='150' height='100' style='margin-right: 20px'>" +
-        "<div>" +
-        "<a href='" +
-        news.link +
-        "' class='fw-bold fs-6 html-black ' target='_blank'" +
-        ">" +
-        trimmedTitle +
-        "</a>" +
-        "<p class='text-capitalize'>" +
-        news.source_id +
-        "</p>" +
-        "</div>" +
-        "</div>"
-    );
+      // Append the news to the news div
+      $("#news").append(
+        "<div class='d-flex' style='margin-bottom: 20px'>" +
+          "<img src='" +
+          image +
+          "' width='150' height='100' style='margin-right: 20px'>" +
+          "<div>" +
+          "<a href='" +
+          news.link +
+          "' class='fw-bold fs-6 html-black ' target='_blank'" +
+          ">" +
+          news.title +
+          "</a>" +
+          "<p class='text-capitalize'>" +
+          news.source_id +
+          "</p>" +
+          "</div>" +
+          "</div>"
+      );
+    } else {
+      return;
+    }
   }
 }

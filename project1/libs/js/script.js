@@ -40,6 +40,8 @@ map.addLayer(markers);
     let lat = position.coords.latitude;
     let lng = position.coords.longitude;
 
+    console.log(lat, lng);
+
     // Get the country from the coordinates
     $.ajax({
       url: "libs/php/country.php",
@@ -62,8 +64,6 @@ map.addLayer(markers);
         $("#exchangeRate option:selected").text(
           result.data[0].annotations.currency.name
         );
-
-        console.log(result.data[0]);
 
         if (result.status.code == 200) {
           $.ajax({
@@ -598,10 +598,6 @@ $("#countrySelect").change(function () {
       countryCode: countryCode,
     },
     success: function (result) {
-      // Clear the select options
-      $("#exchangeRate").empty();
-      $("#exchangeRate option:selected").empty();
-
       // Clear the map layers and markers
       markers.clearLayers();
       cities.clearLayers();
