@@ -39,12 +39,9 @@ function createPersonnelModal() {
 $("#addPersonnelModal").on("show.bs.modal", function (event) {
   // Perform any actions you need when the modal is about to be shown
   $.ajax({
-    url: "libs/php/controllers/departmentHandler.php",
+    url: "libs/php/department/getAllDepartments.php",
     type: "GET",
     dataType: "json",
-    data: {
-      action: "read",
-    },
     success: function (result) {
       // get the status code
       var resultCode = result.status.code;
@@ -58,12 +55,12 @@ $("#addPersonnelModal").on("show.bs.modal", function (event) {
         });
       } else {
         // Display an error message
-        showToast("Error retrieving data", 4000, "red");
+        showToast("Error retrieving data", 5000, "red");
       }
     },
     // if there is an error
     error: function (jqXHR, textStatus, errorThrown) {
-      showToast("Error retrieving data", 4000, "red");
+      showToast("Error retrieving data", 5000, "red");
     },
   });
 });
@@ -77,11 +74,18 @@ $("#addPersonnelForm").on("submit", function (e) {
   const lastName = $("#addPersonnelLastName").val();
   const email = $("#addPersonnelEmailAddress").val();
   const departmentID = $("#addPersonnelDepartment").val();
-  const jobTitle = $("#addPersonnelJobTitle").val();
+
+  // Check if the job title is empty
+  let jobTitle;
+  if ($("#addPersonnelJobTitle").val() == "") {
+    jobTitle = "N/A";
+  } else {
+    jobTitle = $("#addPersonnelJobTitle").val();
+  }
 
   // Make an AJAX request to the server
   $.ajax({
-    url: "libs/php/controllers/personnelHandler.php",
+    url: "libs/php/personnel/createPersonnel.php",
     type: "POST",
     dataType: "json",
     data: {
@@ -90,7 +94,6 @@ $("#addPersonnelForm").on("submit", function (e) {
       jobTitle: jobTitle,
       email: email,
       departmentID: departmentID,
-      action: "create",
     },
     // if the request is successful
     success: function (result) {
@@ -99,16 +102,16 @@ $("#addPersonnelForm").on("submit", function (e) {
         // Close the modal
         $("#addPersonnelModal").modal("hide");
         // Display a success message
-        showToast("Personnel added successfully", 4000, "green");
+        showToast("Personnel added successfully", 5000, "green");
         // Refresh personnel table
         getAllPersonnel();
       } else {
         // Display an error message
-        showToast("Error adding personnel", 4000, "red");
+        showToast("Error adding personnel", 5000, "red");
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      showToast("Error retrieving data", 4000, "red");
+      showToast("Error retrieving data", 5000, "red");
     },
   });
 });
@@ -116,12 +119,11 @@ $("#addPersonnelForm").on("submit", function (e) {
 // Read all personnel
 function getAllPersonnel() {
   $.ajax({
-    url: "libs/php/controllers/personnelHandler.php",
+    url: "libs/php/personnel/getAll.php",
     type: "POST",
     dataType: "json",
     data: {
       txt: $("#searchInp").val().toLowerCase(),
-      action: "read",
     },
     success: function (result) {
       // clear the table
@@ -174,11 +176,11 @@ function getAllPersonnel() {
           );
         });
       } else {
-        showToast("Error retrieving data", 4000, "red");
+        showToast("Error retrieving data", 5000, "red");
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      showToast("Error retrieving data", 4000, "red");
+      showToast("Error retrieving data", 5000, "red");
     },
   });
 }
@@ -194,12 +196,11 @@ $("#personnelBtn").click(function () {
 // Update Personnel Modal - Get personnel by ID
 $("#editPersonnelModal").on("show.bs.modal", function (e) {
   $.ajax({
-    url: "libs/php/controllers/personnelHandler.php",
+    url: "libs/php/personnel/getPersonnelByID.php",
     type: "POST",
     dataType: "json",
     data: {
       id: $(e.relatedTarget).attr("data-id"),
-      action: "readByID",
     },
     success: function (result) {
       // get the status code
@@ -224,11 +225,13 @@ $("#editPersonnelModal").on("show.bs.modal", function (e) {
           result.data.personnel[0].departmentID
         );
       } else {
-        showToast("Error retrieving data", 4000, "red");
+        $("#editPersonnelModal .modal-title").replaceWith(
+          "Error retrieving data"
+        );
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      showToast("Error retrieving data", 4000, "red");
+      showToast("Error retrieving data", 5000, "red");
     },
   });
 });
@@ -246,7 +249,7 @@ $("#editPersonnelForm").on("submit", function (e) {
   const departmentID = $("#editPersonnelDepartment").val();
   // Make an AJAX request to the server
   $.ajax({
-    url: "libs/php/controllers/personnelHandler.php",
+    url: "libs/php/personnel/updatePersonnelByID.php",
     type: "POST",
     dataType: "json",
     data: {
@@ -256,7 +259,6 @@ $("#editPersonnelForm").on("submit", function (e) {
       jobTitle: jobTitle,
       email: email,
       departmentID: departmentID,
-      action: "update",
     },
     success: function (result) {
       var resultCode = result.status.code;
@@ -264,17 +266,16 @@ $("#editPersonnelForm").on("submit", function (e) {
         // Close the modal
         $("#editPersonnelModal").modal("hide");
         // Display a success message
-        showToast(result.status.description, 4000, "green");
+        showToast("Personnel updated successfully", 5000, "green");
         // Refresh personnel table
         getAllPersonnel();
       } else {
         // Display an error message
-        showToast("Personnel not updated, No new input", 4000, "red");
-        $("#editPersonnelModal").modal("hide");
+        showToast("Error updating personnel", 5000, "red");
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      showToast("Error retrieving data", 4000, "red");
+      showToast("Error retrieving data", 5000, "red");
     },
   });
 });
@@ -283,12 +284,11 @@ $("#editPersonnelForm").on("submit", function (e) {
 $("#deletePersonnelModal").on("show.bs.modal", function (e) {
   // Make an AJAX request to the server
   $.ajax({
-    url: "libs/php/controllers/personnelHandler.php",
+    url: "libs/php/personnel/getPersonnelByID.php",
     type: "POST",
     dataType: "json",
     data: {
       id: $(e.relatedTarget).attr("data-id"),
-      action: "readByID",
     },
     success: function (result) {
       // get the status code
@@ -311,11 +311,10 @@ $("#deletePersonnelModal").on("show.bs.modal", function (e) {
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      showToast("Error retrieving data", 4000, "red");
+      showToast("Error retrieving data", 5000, "red");
     },
   });
 });
-
 // Delete Personnel Form
 $("#deletePersonnelForm").on("submit", function (e) {
   // Prevent the default form submission
@@ -324,12 +323,11 @@ $("#deletePersonnelForm").on("submit", function (e) {
   const id = $("#deletePersonnelEmployeeID").val();
   // Make an AJAX request to the server
   $.ajax({
-    url: "libs/php/controllers/personnelHandler.php",
+    url: "libs/php/personnel/deletePersonnelByID.php",
     type: "POST",
     dataType: "json",
     data: {
       id: id,
-      action: "delete",
     },
     success: function (result) {
       var resultCode = result.status.code;
@@ -337,16 +335,16 @@ $("#deletePersonnelForm").on("submit", function (e) {
         // Close the modal
         $("#deletePersonnelModal").modal("hide");
         // Display a success message
-        showToast(result.status.description, 4000, "green");
+        showToast("Personnel deleted successfully", 5000, "green");
         // Refresh personnel table
         getAllPersonnel();
       } else {
         // Display an error message
-        showToast("Error deleting personnel", 4000, "red");
+        showToast("Error deleting personnel", 5000, "red");
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      showToast("Error retrieving data", 4000, "red");
+      showToast("Error retrieving data", 5000, "red");
     },
   });
 });
@@ -367,17 +365,12 @@ function createDepartmentModal() {
 $("#addDepartmentModal").on("show.bs.modal", function (event) {
   // Perform any actions you need when the modal is about to be shown
   $.ajax({
-    url: "libs/php/controllers/locationHandler.php",
+    url: "libs/php/location/getAllLocations.php",
     type: "GET",
     dataType: "json",
-    data: {
-      action: "read",
-    },
     success: function (result) {
       var resultCode = result.status.code;
       if (resultCode == 200) {
-        // empty table before appending new data
-        $("#addDepartmentLocation").empty();
         result.data.forEach((location) => {
           // loop through the result and display the Location List in select input
           $("#addDepartmentLocation").append(
@@ -386,11 +379,11 @@ $("#addDepartmentModal").on("show.bs.modal", function (event) {
         });
       } else {
         // Display an error message
-        showToast("Error adding department", 4000, "red");
+        showToast("Error adding department", 5000, "red");
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      showToast("Error retrieving data", 4000, "red");
+      showToast("Error retrieving data", 5000, "red");
     },
   });
 });
@@ -402,13 +395,12 @@ $("#addDepartmentForm").on("submit", function (e) {
   const name = $("#addDepartmentName").val();
   const locationID = $("#addDepartmentLocation").val();
   $.ajax({
-    url: "libs/php/controllers/departmentHandler.php",
+    url: "libs/php/department/createDepartment.php",
     type: "POST",
     dataType: "json",
     data: {
       name: name,
       locationID: locationID,
-      action: "create",
     },
     success: function (result) {
       var resultCode = result.status.code;
@@ -416,28 +408,27 @@ $("#addDepartmentForm").on("submit", function (e) {
         // Close the modal
         $("#addDepartmentModal").modal("hide");
         // Display a success message
-        showToast("Department added successfully", 4000, "green");
+        showToast("Department added successfully", 5000, "green");
         // Refresh department table
         getAllDepartments();
       } else {
         // Display an error message
-        showToast("Error adding department", 4000, "red");
+        showToast("Error adding department", 5000, "red");
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      showToast("Error retrieving data", 4000, "red");
+      showToast("Error retrieving data", 5000, "red");
     },
   });
 });
 
 function getAllDepartments() {
   $.ajax({
-    url: "libs/php/controllers/departmentHandler.php",
+    url: "libs/php/department/getAllDepartments.php",
     type: "POST",
     dataType: "json",
     data: {
       txt: $("#searchInp").val().toLowerCase(),
-      action: "read",
     },
     success: function (result) {
       $("#departmentTable").empty();
@@ -480,11 +471,11 @@ function getAllDepartments() {
         });
       } else {
         // Display an error message
-        showToast("Error retrieving data", 4000, "red");
+        showToast("Error retrieving data", 5000, "red");
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      showToast("Error retrieving data", 4000, "red");
+      showToast("Error retrieving data", 5000, "red");
     },
   });
 }
@@ -498,12 +489,11 @@ $("#departmentsBtn").click(function () {
 // Update Department Modal - Get Department by ID
 $("#editDepartmentModal").on("show.bs.modal", function (e) {
   $.ajax({
-    url: "libs/php/controllers/departmentHandler.php",
+    url: "libs/php/department/getDepartmentByID.php",
     type: "POST",
     dataType: "json",
     data: {
       id: $(e.relatedTarget).attr("data-id"),
-      action: "readByID",
     },
     success: function (result) {
       console.log(result);
@@ -535,30 +525,25 @@ $("#editDepartmentForm").on("submit", function (e) {
   const locationID = $("#editDepartmentLocation").val();
 
   $.ajax({
-    url: "libs/php/controllers/departmentHandler.php",
+    url: "libs/php/department/updateDepartmentByID.php",
     type: "POST",
     dataType: "json",
     data: {
       id: id,
       name: name,
       locationID: locationID,
-      action: "update",
     },
     success: function (result) {
       var resultCode = result.status.code;
       if (resultCode == 200) {
         // Refresh department table
         $("#editDepartmentModal").modal("hide");
-        showToast(result.status.description, 4000, "green");
+        showToast("Department updated successfully", 5000, "green");
         getAllDepartments();
       } else {
         // Display an error message
-        showToast("Department not updated, No new input", 4000, "red");
-        $("#editDepartmentModal").modal("hide");
+        showToast("Error updating department", 5000, "red");
       }
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      showToast("Error retrieving data", 4000, "red");
     },
   });
 });
@@ -566,12 +551,11 @@ $("#editDepartmentForm").on("submit", function (e) {
 // Delete Department Modal - Get Department by ID
 $("#deleteDepartmentModal").on("show.bs.modal", function (e) {
   $.ajax({
-    url: "libs/php/controllers/departmentHandler.php",
+    url: "libs/php/department/getPersonnelCount.php",
     type: "POST",
     dataType: "json",
     data: {
       id: $(e.relatedTarget).attr("data-id"),
-      action: "count",
     },
     success: function (result) {
       var resultCode = result.status.code;
@@ -598,7 +582,7 @@ $("#deleteDepartmentModal").on("show.bs.modal", function (e) {
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      showToast("Error retrieving data", 4000, "red");
+      showToast("Error retrieving data", 5000, "red");
     },
   });
 });
@@ -608,12 +592,11 @@ $("#deleteDepartmentForm").on("submit", function (e) {
   e.preventDefault();
   const id = $("#deleteDepartmentID").val();
   $.ajax({
-    url: "libs/php/controllers/departmentHandler.php",
+    url: "libs/php/department/deleteDepartmentByID.php",
     type: "POST",
     dataType: "json",
     data: {
       id: id,
-      action: "delete",
     },
     success: function (result) {
       var resultCode = result.status.code;
@@ -621,12 +604,12 @@ $("#deleteDepartmentForm").on("submit", function (e) {
         // Close the modal
         $("#deleteDepartmentModal").modal("hide");
         // Display a success message
-        showToast(result.status.description, 4000, "green");
+        showToast("Personnel deleted successfully", 5000, "green");
         // Refresh personnel table
         getAllDepartments();
       } else {
         // Display an error message
-        showToast("Error deleting personnel", 4000, "red");
+        showToast("Error deleting personnel", 5000, "red");
       }
     },
   });
@@ -648,27 +631,26 @@ $("#addLocationForm").on("submit", function (e) {
   e.preventDefault();
   const name = $("#addLocationName").val();
   $.ajax({
-    url: "libs/php/controllers/locationHandler.php",
+    url: "libs/php/location/createLocation.php",
     type: "POST",
     dataType: "json",
     data: {
       name: name,
-      action: "create",
     },
     success: function (result) {
       var resultCode = result.status.code;
       if (resultCode == 200) {
         // Refresh location table
         $("#addLocationModal").modal("hide");
-        showToast(result.status.description, 4000, "green");
+        showToast("Location added successfully", 5000, "green");
         getAllLocations();
       } else {
         // Display an error message
-        showToast("Error adding location", 4000, "red");
+        showToast("Error adding location", 5000, "red");
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      showToast("Error retrieving data", 4000, "red");
+      showToast("Error retrieving data", 5000, "red");
     },
   });
 });
@@ -682,25 +664,16 @@ $("#locationsBtn").click(function () {
 // Read all locations
 function getAllLocations() {
   $.ajax({
-    url: "libs/php/controllers/locationHandler.php",
+    url: "libs/php/location/getAllLocations.php",
     type: "POST",
     dataType: "json",
     data: {
       txt: $("#searchInp").val().toLowerCase(),
-      action: "read",
     },
     success: function (result) {
       $("#locationTable").empty();
       var resultCode = result.status.code;
       if (resultCode == 200) {
-        if (result.data.length == 0) {
-          $("#locationTable").append(
-            `<tr>
-             <td class="text-center" colspan="6">
-              <h6>No Location found</h6>
-             </td></tr>`
-          );
-        }
         // loop through the result and display the data in the table
         result.data.forEach((location) => {
           $("#locationTable").append(
@@ -729,11 +702,11 @@ function getAllLocations() {
         });
       } else {
         // Display an error message
-        showToast(result.status.description, 4000, "red");
+        showToast("Error deleting personnel", 5000, "red");
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      showToast("Error retrieving data", 4000, "red");
+      showToast("Error retrieving data", 5000, "red");
     },
   });
 }
@@ -741,12 +714,11 @@ function getAllLocations() {
 // Update Location Modal - Get Location by ID
 $("#editLocationModal").on("show.bs.modal", function (e) {
   $.ajax({
-    url: "libs/php/controllers/locationHandler.php",
+    url: "libs/php/location/getLocationByID.php",
     type: "POST",
     dataType: "json",
     data: {
       id: $(e.relatedTarget).attr("data-id"),
-      action: "readByID",
     },
     success: function (result) {
       const resultCode = result.status.code;
@@ -755,11 +727,11 @@ $("#editLocationModal").on("show.bs.modal", function (e) {
         $("#editLocationName").val(result.data[0].name);
       } else {
         // Display an error message
-        showToast(result.status.description, 4000, "red");
+        showToast("Error deleting personnel", 5000, "red");
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      showToast("Error retrieving data", 4000, "red");
+      showToast("Error retrieving data", 5000, "red");
     },
   });
 });
@@ -770,13 +742,12 @@ $("#editLocationForm").on("submit", function (e) {
   const id = $("#editLocationID").val();
   const name = $("#editLocationName").val();
   $.ajax({
-    url: "libs/php/controllers/locationHandler.php",
+    url: "libs/php/location/updateLocationByID.php",
     type: "POST",
     dataType: "json",
     data: {
       id: id,
       name: name,
-      action: "update",
     },
     success: function (result) {
       var resultCode = result.status.code;
@@ -784,17 +755,16 @@ $("#editLocationForm").on("submit", function (e) {
         // Close the modal
         $("#editLocationModal").modal("hide");
         // Display a success message
-        showToast(result.status.description, 4000, "green");
+        showToast("Location updated successfully", 5000, "green");
         // Refresh location table
         getAllLocations();
       } else {
         // Display an error message
-        showToast("Location not updated, No new input", 4000, "red");
-        $("#editLocationModal").modal("hide");
+        showToast("Error updating location", 5000, "red");
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      showToast("Error retrieving data", 4000, "red");
+      showToast("Error retrieving data", 5000, "red");
     },
   });
 });
@@ -802,12 +772,11 @@ $("#editLocationForm").on("submit", function (e) {
 // Delete Department Modal - Get Department by ID
 $("#deleteLocationModal").on("show.bs.modal", function (e) {
   $.ajax({
-    url: "libs/php/controllers/locationHandler.php",
+    url: "libs/php/location/getLocationCount.php",
     type: "POST",
     dataType: "json",
     data: {
       id: $(e.relatedTarget).attr("data-id"),
-      action: "count",
     },
     success: function (result) {
       // get the status code
@@ -835,7 +804,7 @@ $("#deleteLocationModal").on("show.bs.modal", function (e) {
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      showToast("Error retrieving data", 4000, "red");
+      showToast("Error retrieving data", 5000, "red");
     },
   });
 });
@@ -846,12 +815,11 @@ $("#deleteLocationForm").on("submit", function (e) {
   e.preventDefault();
   // Get the form values
   $.ajax({
-    url: "libs/php/controllers/locationHandler.php",
+    url: "libs/php/location/deleteLocationByID.php",
     type: "POST",
     dataType: "json",
     data: {
       id: $("#deleteLocationID").val(),
-      action: "delete",
     },
     success: function (result) {
       var resultCode = result.status.code;
@@ -859,16 +827,16 @@ $("#deleteLocationForm").on("submit", function (e) {
         // Close the modal
         $("#deleteLocationModal").modal("hide");
         // Display a success message
-        showToast(result.status.description, 4000, "green");
+        showToast("Location deleted successfully", 5000, "green");
         // Refresh location table
         getAllLocations();
       } else {
         // Display an error message
-        showToast(result.status.description, 4000, "red");
+        showToast("Error deleting location", 5000, "red");
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      showToast("Error retrieving data", 4000, "red");
+      showToast("Error retrieving data", 5000, "red");
     },
   });
 });
@@ -908,11 +876,8 @@ $("#filterBtn").click(function () {
 // Filter Personnel Modal
 $("#filterModal").on("show.bs.modal", function (e) {
   $.ajax({
-    url: "libs/php/controllers/departmentHandler.php",
-    type: "POST",
-    data: {
-      action: "read",
-    },
+    url: "libs/php/department/getAllDepartments.php",
+    type: "GET",
     dataType: "json",
     success: function (result) {
       var resultCode = result.status.code;
@@ -933,11 +898,8 @@ $("#filterModal").on("show.bs.modal", function (e) {
         });
         // Make an AJAX request to the server
         $.ajax({
-          url: "libs/php/controllers/locationHandler.php",
-          type: "POST",
-          data: {
-            action: "read",
-          },
+          url: "libs/php/location/getAllLocations.php",
+          type: "GET",
           dataType: "json",
           success: function (result) {
             var resultCode = result.status.code;
@@ -958,16 +920,16 @@ $("#filterModal").on("show.bs.modal", function (e) {
               });
             } else {
               // Display an error message
-              showToast("Error retrieving data", 4000, "red");
+              showToast("Error retrieving data", 5000, "red");
             }
           },
         });
       } else {
-        showToast("Error retrieving data", 4000, "red");
+        showToast("Error retrieving data", 5000, "red");
       }
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      showToast("Error retrieving data", 4000, "red");
+      showToast("Error retrieving data", 5000, "red");
     },
   });
 });
@@ -1001,7 +963,7 @@ $("#filterPersonnelForm").on("submit", function (e) {
 
   // Check if the filter options are default
   if (locationID == "default" && departmentID == "default") {
-    showToast("Please select a filter option Or Cancel", 4000, "red");
+    showToast("Please select a filter option Or Cancel", 5000, "red");
     return;
     // Check if the filter options are not default
   } else if (departmentID !== "default") {
