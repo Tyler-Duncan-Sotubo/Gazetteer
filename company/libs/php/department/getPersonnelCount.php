@@ -27,10 +27,10 @@ if (mysqli_connect_errno()) {
 
 // SQL statement accepts parameters and so is prepared to avoid SQL injection.
 $query = $conn->prepare(
-    'SELECT d.id, d.name, COUNT(p.departmentID) AS personnel_count
-    FROM department d
-    LEFT JOIN personnel p ON d.id = p.departmentID
-    WHERE d.id = ? GROUP BY d.id'
+    'SELECT d.name AS departmentName, COUNT(p.id) as personnelCount 
+    FROM department d 
+    LEFT JOIN personnel p ON (p.departmentID = d.id) 
+    WHERE d.id  = ?'
 );
 $query->bind_param("i", $_POST['id']);
 $query->execute();

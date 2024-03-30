@@ -47,6 +47,8 @@ $("#addPersonnelModal").on("show.bs.modal", function (event) {
       var resultCode = result.status.code;
       // check if the status code is 200
       if (resultCode == 200) {
+        // empty the select input before appending new data
+        $("#addPersonnelDepartment").empty();
         // loop through the result and display the Department List in select input
         result.data.forEach((department) => {
           $("#addPersonnelDepartment").append(
@@ -139,10 +141,10 @@ function getAllPersonnel() {
              </td></tr>`
           );
         }
+        let rows = "";
         // loop through the result and display the data in the table
         result.data.forEach((personnel) => {
-          $("#personnelTable").append(
-            `<tr>
+          rows += `<tr>
             <td class="align-middle text-nowrap">${personnel.lastName}, ${personnel.firstName}</td>
             <td class="align-middle text-nowrap d-none d-md-table-cell">
               ${personnel.department}
@@ -172,9 +174,10 @@ function getAllPersonnel() {
               <i class="fa-solid fa-trash fa-fw"></i>
               </button>
             </td>
-          </tr>`
-          );
+          </tr>`;
         });
+
+        $("#personnelTable").append(rows);
       } else {
         showToast("Error retrieving data", 5000, "red");
       }
@@ -371,6 +374,7 @@ $("#addDepartmentModal").on("show.bs.modal", function (event) {
     success: function (result) {
       var resultCode = result.status.code;
       if (resultCode == 200) {
+        $("#addDepartmentLocation").empty();
         result.data.forEach((location) => {
           // loop through the result and display the Location List in select input
           $("#addDepartmentLocation").append(
@@ -443,9 +447,10 @@ function getAllDepartments() {
       var resultCode = result.status.code;
       if (resultCode == 200) {
         // loop through the result and display the data in the table
+
+        let rows = "";
         result.data.forEach((department) => {
-          $("#departmentTable").append(
-            `<tr>
+          rows += `<tr>
             <td class="align-middle text-nowrap">${department.name}</td>
             <td class="align-middle text-nowrap d-none d-md-table-cell">
               ${department.location}
@@ -466,9 +471,9 @@ function getAllDepartments() {
                  <i class="fa-solid fa-trash fa-fw"></i>
               </button>
             </td>
-          </tr>`
-          );
+          </tr>`;
         });
+        $("#departmentTable").append(rows);
       } else {
         // Display an error message
         showToast("Error retrieving data", 5000, "red");
@@ -560,13 +565,14 @@ $("#deleteDepartmentModal").on("show.bs.modal", function (e) {
     success: function (result) {
       var resultCode = result.status.code;
       if (resultCode == 200) {
+        console.log(result);
         // set the form values
         $("#deleteDepartmentID").val(result.data[0].id);
         //  check if the department has personnel if yes! display the personnel count
         // and the department name and Don't allow the user to delete the department
-        if (result.data[0].personnel_count > 0) {
-          $("#departmentName").html(result.data[0].name);
-          $("#employeeCount").html(result.data[0].personnel_count);
+        if (result.data[0].personnelCount > 0) {
+          $("#departmentName").html(result.data[0].departmentName);
+          $("#employeeCount").html(result.data[0].personnelCount);
           $("#filledDepartment").show();
           $("#filledDeptMessage").show();
           $("#emptyDepartment").hide();
@@ -675,9 +681,9 @@ function getAllLocations() {
       var resultCode = result.status.code;
       if (resultCode == 200) {
         // loop through the result and display the data in the table
+        let rows = "";
         result.data.forEach((location) => {
-          $("#locationTable").append(
-            `<tr>
+          rows += `<tr>
             <td class="align-middle text-nowrap">${location.name}</td>
             <td class="align-middle text-end text-nowrap">
               <button type="button" 
@@ -697,9 +703,9 @@ function getAllLocations() {
                 <i class="fa-solid fa-trash fa-fw"></i>
               </button>
             </td>
-          </tr>`
-          );
+          </tr>`;
         });
+        $("#locationTable").append(rows);
       } else {
         // Display an error message
         showToast("Error deleting personnel", 5000, "red");
@@ -873,6 +879,9 @@ $("#filterBtn").click(function () {
   }
 });
 
+let locationFilterName = "";
+let departmentFilterName = "";
+
 // Filter Personnel Modal
 $("#filterModal").on("show.bs.modal", function (e) {
   $.ajax({
@@ -887,7 +896,7 @@ $("#filterModal").on("show.bs.modal", function (e) {
         // prepend the default option
         var defaultOption = $("<option>", {
           value: "default",
-          text: "Select Department",
+          text: "All",
         });
         $("#filterDepartment").prepend(defaultOption);
         // loop through the result and display the Department List in select input
@@ -896,6 +905,10 @@ $("#filterModal").on("show.bs.modal", function (e) {
             `<option value="${department.name}">${department.name}</option>`
           );
         });
+
+        if (departmentFilterName !== "") {
+          $("#filterDepartment").val(departmentFilterName);
+        }
         // Make an AJAX request to the server
         $.ajax({
           url: "libs/php/location/getAllLocations.php",
@@ -909,7 +922,7 @@ $("#filterModal").on("show.bs.modal", function (e) {
               // prepend the default option
               var defaultOption = $("<option>", {
                 value: "default",
-                text: "Select Location",
+                text: "All",
               });
               $("#filterLocation").prepend(defaultOption);
               result.data.forEach((location) => {
@@ -918,12 +931,20 @@ $("#filterModal").on("show.bs.modal", function (e) {
                   `<option value="${location.name}">${location.name}</option>`
                 );
               });
+
+              if (locationFilterName !== "") {
+                $("#filterLocation").val(locationFilterName);
+              }
+              // check if the filter options are not default
             } else {
               // Display an error message
               showToast("Error retrieving data", 5000, "red");
             }
           },
         });
+
+        console.log(locationFilterName);
+        console.log(departmentFilterName);
       } else {
         showToast("Error retrieving data", 5000, "red");
       }
@@ -934,18 +955,19 @@ $("#filterModal").on("show.bs.modal", function (e) {
   });
 });
 
-$("#filterPersonnelForm").on("change", function (e) {
-  const departmentID = $("#filterDepartment").val();
-  const locationID = $("#filterLocation").val();
+$("#filterDepartment").change(function () {
+  if (this.value !== "default") {
+    $("#filterLocation").val("default");
+    departmentFilterName = $("#filterDepartment").val();
+    locationFilterName = "";
+  }
+});
 
-  // Disable the other select input when one is selected
-  if (departmentID !== "default") {
-    $("#filterLocation").prop("disabled", true);
-  } else if (locationID !== "default") {
-    $("#filterDepartment").prop("disabled", true);
-  } else {
-    $("#filterLocation").prop("disabled", false);
-    $("#filterDepartment").prop("disabled", false);
+$("#filterLocation").change(function () {
+  if (this.value !== "default") {
+    $("#filterDepartment").val("default");
+    locationFilterName = $("#filterLocation").val();
+    departmentFilterName = "";
   }
 });
 

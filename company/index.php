@@ -27,7 +27,7 @@
       <div class="row">
         <!-- Filter Modal -->
         <div id="filterModal" class="modal fade" tabindex="-1" data-bs-backdrop="false" data-bs-keyboard="false" aria-labelledby="exampleModalLabel" aria-hidden="true">
-          <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+          <div class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content shadow">
               <div class="modal-header bg-primary bg-gradient text-white">
                 <h5 class="modal-title">Filter</h5>
@@ -124,9 +124,9 @@
 
   <!-- ADD PERSONNEL MODAL -->
   <div id="addPersonnelModal" class="modal fade" tabindex="-1" data-bs-backdrop="false" data-bs-keyboard="false" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content shadow">
-        <div class="modal-header bg-success bg-gradient text-white">
+        <div class="modal-header bg-primary bg-gradient text-white">
           <h5 class="modal-title">Add Personnel</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
@@ -157,10 +157,10 @@
           </form>
         </div>
         <div class="modal-footer">
-          <button type="submit" form="addPersonnelForm" class="btn btn-outline-success btn-sm myBtn">
+          <button type="submit" form="addPersonnelForm" class="btn btn-outline-primary btn-sm myBtn">
             SAVE
           </button>
-          <button type="button" class="btn btn-outline-success btn-sm myBtn" data-bs-dismiss="modal">
+          <button type="button" class="btn btn-outline-primary btn-sm myBtn" data-bs-dismiss="modal">
             CANCEL
           </button>
         </div>
@@ -171,7 +171,7 @@
 
   <!-- EDIT PERSONNEL MODAL -->
   <div id="editPersonnelModal" class="modal fade" tabindex="-1" data-bs-backdrop="false" data-bs-keyboard="false" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content shadow">
         <div class="modal-header bg-primary bg-gradient text-white">
           <h5 class="modal-title">Edit employee</h5>
@@ -217,7 +217,7 @@
 
   <!-- DELETE PERSONNEL MODAL -->
   <div id="deletePersonnelModal" class="modal fade">
-    <div class="modal-dialog modal-md d-sm:modal-sm modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-sm d-sm:modal-sm modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content shadow">
         <div class="modal-header bg-danger bg-gradient text-white">
           <h5 class="modal-title">Delete employee</h5>
@@ -243,9 +243,9 @@
 
   <!--ADD DEPARTMENT MODAL -->
   <div id="addDepartmentModal" class="modal fade">
-    <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content shadow">
-        <div class="modal-header bg-success bg-gradient text-white">
+        <div class="modal-header bg-primary bg-gradient text-white">
           <h5 class="modal-title">Add department</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
@@ -264,8 +264,8 @@
           </form>
         </div>
         <div class="modal-footer">
-          <button type="submit" form="addDepartmentForm" class="btn btn-outline-success btn-sm myBtn">SAVE</button>
-          <button type="button" class="btn btn-outline-success btn-sm myBtn" data-bs-dismiss="modal">CANCEL</button>
+          <button type="submit" form="addDepartmentForm" class="btn btn-outline-primary btn-sm myBtn">SAVE</button>
+          <button type="button" class="btn btn-outline-primary btn-sm myBtn" data-bs-dismiss="modal">CANCEL</button>
         </div>
       </div>
     </div>
@@ -274,7 +274,7 @@
 
   <!-- EDIT DEPARTMENT MODAL -->
   <div id="editDepartmentModal" class="modal fade" tabindex="-1" data-bs-backdrop="false" data-bs-keyboard="false" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content shadow">
         <div class="modal-header bg-primary bg-gradient text-white">
           <h5 class="modal-title">Edit Department</h5>
@@ -308,7 +308,7 @@
 
   <!-- DELETE DEPARTMENT MODAL -->
   <div id="deleteDepartmentModal" class="modal fade">
-    <div class="modal-dialog modal-md d-sm:modal-sm modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-sm d-sm:modal-sm modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content shadow">
         <div class="modal-header bg-danger bg-gradient text-white">
           <h5 class="modal-title">Delete Department</h5>
@@ -346,9 +346,9 @@
 
   <!-- ADD LOCATION MODAL -->
   <div id="addLocationModal" class="modal fade">
-    <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content shadow">
-        <div class="modal-header bg-success bg-gradient text-white">
+        <div class="modal-header bg-primary bg-gradient text-white">
           <h5 class="modal-title">Add Location</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
@@ -362,8 +362,8 @@
           </form>
         </div>
         <div class="modal-footer">
-          <button type="submit" form="addLocationForm" class="btn btn-outline-success btn-sm myBtn">SAVE</button>
-          <button type="button" class="btn btn-outline-success btn-sm myBtn" data-bs-dismiss="modal">CANCEL</button>
+          <button type="submit" form="addLocationForm" class="btn btn-outline-primary btn-sm myBtn">SAVE</button>
+          <button type="button" class="btn btn-outline-primary btn-sm myBtn" data-bs-dismiss="modal">CANCEL</button>
         </div>
       </div>
     </div>
@@ -372,7 +372,7 @@
 
   <!-- EDIT LOCATION MODAL -->
   <div id="editLocationModal" class="modal fade" tabindex="-1" data-bs-backdrop="false" data-bs-keyboard="false" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content shadow">
         <div class="modal-header bg-primary bg-gradient text-white">
           <h5 class="modal-title">Edit Location</h5>
@@ -402,7 +402,7 @@
 
   <!-- DELETE LOCATION MODAL -->
   <div id="deleteLocationModal" class="modal fade">
-    <div class="modal-dialog modal-md d-sm:modal-sm modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-sm d-sm:modal-sm modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content shadow">
         <div class="modal-header bg-danger bg-gradient text-white">
           <h5 class="modal-title">Delete Location</h5>
